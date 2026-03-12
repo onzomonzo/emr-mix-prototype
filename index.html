@@ -634,20 +634,20 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
 <script>
 // ===== Data =====
 var rxData = [
-  { code: 'lnx',     name: '라이넥주(태반주사)',           dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: true,  mix: '1', claim: 'Y', pay: '보험' },
-  { code: 'cwns100', name: '중외엔에스100ml',              dose: '1',  perDay: '1', days: '1', usage: 'IV', mActive: true,  mix: '1', claim: 'Y', pay: '보험' },
-  { code: 'dex250',  name: '5%포도당키트250ml',            dose: '1',  perDay: '1', days: '1', usage: 'IV', mActive: true,  mix: '1', claim: 'Y', pay: '보험' },
+  { code: 'lnx',     name: '라이넥주(태반주사)',           dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: false, mix: '-', claim: 'Y', pay: '보험' },
+  { code: 'cwns100', name: '중외엔에스100ml',              dose: '1',  perDay: '1', days: '1', usage: 'IV', mActive: false, mix: '-', claim: 'Y', pay: '보험' },
+  { code: 'dex250',  name: '5%포도당키트250ml',            dose: '1',  perDay: '1', days: '1', usage: 'IV', mActive: false, mix: '-', claim: 'Y', pay: '보험' },
   { code: 'ns250',   name: '녹십자생리식염키트250ml',      dose: '1',  perDay: '1', days: '1', usage: '',   mActive: false, mix: '-', claim: 'Y', pay: '보험' },
   { code: 'sw200',   name: '멸균증류수(주사용수)200ml',    dose: '1',  perDay: '1', days: '1', usage: '',   mActive: false, mix: '-', claim: 'Y', pay: '보험' },
-  { code: 'furs',    name: '푸르설타민주(마늘주사)',        dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: true,  mix: '2', claim: 'Y', pay: '비급여' },
-  { code: 'gcb5',    name: '지씨비타오(B5)',               dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: true,  mix: '1', claim: 'Y', pay: '비급여' },
-  { code: 'mvb6',    name: '메가비타식스(B6)',             dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: true,  mix: '1', claim: 'Y', pay: '비급여' },
-  { code: 'gcb12',   name: '지씨비타일이(B12)',            dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: true,  mix: '1', claim: 'Y', pay: '비급여' },
+  { code: 'furs',    name: '푸르설타민주(마늘주사)',        dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: false, mix: '-', claim: 'Y', pay: '비급여' },
+  { code: 'gcb5',    name: '지씨비타오(B5)',               dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: false, mix: '-', claim: 'Y', pay: '비급여' },
+  { code: 'mvb6',    name: '메가비타식스(B6)',             dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: false, mix: '-', claim: 'Y', pay: '비급여' },
+  { code: 'gcb12',   name: '지씨비타일이(B12)',            dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: false, mix: '-', claim: 'Y', pay: '비급여' },
   { code: 'hspg',    name: '히시파겐씨주',                 dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: false, mix: '-', claim: 'Y', pay: '비급여' },
-  { code: 'mgvc',    name: '메가그린(비타민C)',            dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: true,  mix: '1', claim: 'Y', pay: '비급여' },
+  { code: 'mgvc',    name: '메가그린(비타민C)',            dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: false, mix: '-', claim: 'Y', pay: '비급여' },
   { code: 'mgns5',   name: '메가네슘주5ml',               dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: false, mix: '-', claim: 'Y', pay: '비급여' },
   { code: 'ivfs',    name: 'IV Filter SET',                dose: '1',  perDay: '1', days: '1', usage: '',   mActive: false, mix: '-', claim: 'Y', pay: '비급여' },
-  { code: 'cwns100', name: '중외엔에스100ml',              dose: '1',  perDay: '1', days: '1', usage: 'IV', mActive: true,  mix: '1', claim: 'Y', pay: '보험' },
+  { code: 'cwns100', name: '중외엔에스100ml',              dose: '1',  perDay: '1', days: '1', usage: 'IV', mActive: false, mix: '-', claim: 'Y', pay: '보험' },
 ];
 
 var bundleData = { code: 'infset', name: '수액 INFUSION SET(Y)', mActive: false, mix: '-' };
