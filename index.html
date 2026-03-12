@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EMR MIX 칼럼 A/B 테스트</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sans-serif; background: #F8F9FA; color: #374151; font-size: 12px; }
+
+.page-wrapper { display: flex; flex-direction: column; height: 100vh; }
+
+/* === Top Header === */
+.top-header {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 48px; padding: 0 16px; background: #fff;
+  border-bottom: 1px solid #E5E7EB; flex-shrink: 0;
+}
+.header-left { display: flex; align-items: center; gap: 16px; }
+.header-left .title { font-size: 16px; font-weight: 700; color: #111827; }
+.header-left .chart-num, .header-left .patient-name { font-size: 14px; font-weight: 600; color: #111827; }
+.header-left .patient-info, .header-left .patient-id { font-size: 12px; color: #6B7280; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+.tag-success { background: #D1FAE5; color: #065F46; }
+.tag-info { background: #DBEAFE; color: #1E40AF; }
+.tabs { display: flex; gap: 0; margin-left: 16px; }
+.tab { padding: 8px 16px; font-size: 12px; color: #6B7280; cursor: pointer; border-bottom: 2px solid transparent; }
+.tab.active { color: #7C3AED; font-weight: 600; border-bottom-color: #7C3AED; }
+.header-right { display: flex; align-items: center; gap: 8px; }
+.online-dot { width: 8px; height: 8px; border-radius: 50%; background: #10B981; }
+.doctor-name { font-size: 12px; color: #374151; }
+
+/* === A/B Test Bar === */
+.abtest-bar {
+  display: flex; align-items: center; gap: 0; padding: 0 16px;
+  border-bottom: 1px solid #E5E7EB; background: #fff; flex-shrink: 0;
+}
+.abtest-tab {
+  padding: 10px 24px; font-size: 13px; font-weight: 500; color: #6B7280;
+  cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.15s;
+  user-select: none;
+}
+.abtest-tab:hover { color: #374151; background: #F3F4F6; }
+.abtest-tab.active-a { color: #7C3AED; border-bottom-color: #7C3AED; font-weight: 700; }
+.abtest-tab.active-b { color: #2563EB; border-bottom-color: #2563EB; font-weight: 700; }
+.tab-badge {
+  display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10px;
+  font-weight: 600; margin-right: 6px; color: #fff;
+}
+.badge-a { background: #7C3AED; }
+.badge-b { background: #2563EB; }
+.abtest-desc {
+  margin-left: 24px; font-size: 11px; color: #9CA3AF; font-style: italic;
+}
+.abtest-panel { display: none; flex-direction: column; flex: 1; min-height: 0; }
+.abtest-panel.active { display: flex; }
+
+/* === Content === */
+.content-area { display: flex; flex: 1; min-height: 0; }
+.column { display: flex; flex-direction: column; gap: 8px; padding: 8px; border-right: 1px solid #E5E7EB; background: #F8F9FA; }
+.column-1 { width: 360px; }
+.column-2 { flex: 1; }
+.column-3 { width: 520px; }
+.column-4 { width: 260px; }
+
+.card {
+  background: #fff; border: 1px solid #E5E7EB; border-radius: 6px;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.card.flex-1 { flex: 1; min-height: 0; }
+.card-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-bottom: 1px solid #E5E7EB; font-weight: 600; font-size: 12px; color: #111827;
+}
+.card-body { flex: 1; overflow-y: auto; }
+
+/* Patient / Visit */
+.patient-summary { height: 200px; }
+.patient-summary .card-body { padding: 12px; }
+.summary-row { display: flex; gap: 8px; margin-bottom: 6px; font-size: 11px; }
+.summary-label { color: #6B7280; width: 70px; flex-shrink: 0; }
+.summary-value { color: #374151; }
+.visit-item { display: flex; align-items: center; padding: 6px 12px; font-size: 11px; border-bottom: 1px solid #F3F4F6; cursor: pointer; }
+.visit-item:hover { background: #F9FAFB; }
+.visit-item.selected { background: #F3E8FF; }
+.visit-date { width: 80px; color: #374151; }
+.visit-dept { width: 50px; color: #6B7280; }
+.visit-doctor { color: #6B7280; }
+
+/* Tables */
+.section-table { border: 1px solid #E5E7EB; border-radius: 4px; overflow: hidden; }
+.section-table.flex-1 { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.data-table th {
+  background: #F8F9FA; padding: 6px 8px; text-align: left;
+  font-weight: 500; color: #6B7280; border-bottom: 1px solid #E5E7EB;
+  white-space: nowrap; position: sticky; top: 0; z-index: 1;
+}
+.data-table td { padding: 4px 8px; border-bottom: 1px solid #F3F4F6; color: #374151; white-space: nowrap; }
+.data-table tr:hover { background: #F9FAFB; }
+
+/* Rx row selection */
+.rx-row { cursor: default; }
+.rx-row .rx-name-cell { cursor: pointer; user-select: none; }
+.rx-row.multi-selected { background: #EEF2FF !important; }
+.rx-row.multi-selected:hover { background: #E0E7FF !important; }
+
+/* Bundle row */
+.bundle-row { background: #EFF6FF; font-weight: 500; }
+.bundle-row:hover { background: #DBEAFE !important; }
+.bundle-toggle { cursor: pointer; font-size: 10px; color: #3B82F6; display: inline-block; transition: transform 0.15s; }
+.bundle-toggle.collapsed { transform: rotate(-90deg); }
+
+/* MIX column */
+.mix-header { background: #FDE68A !important; color: #92400E !important; font-weight: 600 !important; text-align: center !important; }
+.mix-cell { text-align: center; padding: 2px 4px !important; }
+.mix-cell-inner { display: inline-flex; align-items: center; gap: 4px; justify-content: center; }
+
+/* M button */
+.m-btn {
+  width: 18px; height: 18px; border-radius: 3px; border: none;
+  font-size: 9px; font-weight: 700; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all 0.15s; line-height: 1; flex-shrink: 0;
+}
+.m-btn.active { background: #3B82F6; color: #fff; }
+.m-btn.inactive { background: #D1D5DB; color: #9CA3AF; }
+.m-btn:hover { opacity: 0.85; }
+
+/* MIX dropdown */
+.mix-dropdown {
+  height: 18px; border: 1px solid #D1D5DB; border-radius: 3px;
+  background: #fff; font-size: 9px; font-weight: 500; color: #374151;
+  padding: 0 2px; cursor: pointer; outline: none;
+  font-family: inherit; min-width: 32px;
+}
+.mix-dropdown:focus { border-color: #3B82F6; }
+
+/* MIX group header */
+.mix-group-header {
+  background: #F0F9FF; font-weight: 600; border-top: 2px solid #93C5FD;
+}
+.mix-group-header td { color: #1D4ED8 !important; font-weight: 600; }
+
+/* Search */
+.search-bar { display: flex; align-items: center; gap: 8px; padding: 8px 0; }
+.search-bar label { font-size: 11px; color: #6B7280; white-space: nowrap; }
+.search-input {
+  height: 28px; padding: 4px 8px; border: 1px solid #E5E7EB; border-radius: 4px;
+  font-size: 11px; width: 200px; outline: none; font-family: inherit;
+}
+.search-input:focus { border-color: #7C3AED; }
+
+/* Rx icon */
+.rx-icon-cell { text-align: center; width: 24px; }
+.rx-icon-cell svg { vertical-align: middle; }
+
+/* Bundle Prescription panel */
+.bp-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border-bottom: 1px solid #E5E7EB;
+}
+.bp-title { font-size: 13px; font-weight: 700; color: #111827; flex: 1; }
+.icon-btn {
+  width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+  color: #6B7280; cursor: pointer; border: 1px solid #E5E7EB; background: #fff; border-radius: 4px;
+}
+.icon-btn:hover { background: #F3F4F6; color: #111827; }
+.bp-toolbar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-bottom: 1px solid #E5E7EB; background: #fff;
+}
+.bp-search-input {
+  flex: 1; height: 28px; padding: 4px 8px; border: 1px solid #E5E7EB; border-radius: 4px;
+  font-size: 11px; font-family: inherit; outline: none; background: #fff;
+}
+.bp-search-input:focus { border-color: #7C3AED; }
+.bp-content { display: flex; flex: 1; min-height: 0; }
+.bp-list { width: 40%; border-right: 1px solid #E5E7EB; overflow-y: auto; }
+.bp-cat { display: flex; align-items: center; gap: 6px; padding: 6px 10px; font-size: 11px; font-weight: 500; color: #111827; }
+.bp-item {
+  display: flex; align-items: center; padding: 5px 10px 5px 20px; font-size: 11px; color: #374151;
+  cursor: pointer; border-left: 3px solid transparent;
+}
+.bp-item::before { content: '\2013'; margin-right: 6px; color: #9CA3AF; }
+.bp-item:hover { background: #F9FAFB; }
+.bp-item.selected { background: #F3E8FF; border-left-color: #7C3AED; color: #7C3AED; font-weight: 500; }
+.bp-detail { width: 60%; overflow-y: auto; display: flex; flex-direction: column; }
+.bp-info {
+  display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+  border-bottom: 1px solid #E5E7EB; font-size: 11px; color: #374151;
+}
+.bp-info-val { color: #111827; font-weight: 500; }
+.bp-info-sep { color: #D1D5DB; }
+.bp-section { padding: 10px 12px; }
+.bp-section-title { font-size: 12px; font-weight: 700; color: #111827; }
+.bp-section-item { padding: 3px 0; font-size: 11px; color: #374151; }
+
+/* Column 4 */
+.symptoms-card { height: 200px; }
+.textarea-field {
+  width: 100%; border: 1px solid #E5E7EB; border-radius: 4px;
+  background: #F8F9FA; padding: 8px; font-size: 11px; resize: none;
+  font-family: inherit; color: #374151; outline: none;
+}
+.textarea-field:focus { border-color: #7C3AED; }
+.tag-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.tag-small { padding: 4px 8px; background: #F8F9FA; border: 1px solid #E5E7EB; border-radius: 4px; font-size: 10px; color: #374151; }
+
+.status-bar { display: flex; align-items: center; gap: 8px; }
+.status-bar button {
+  padding: 4px 12px; font-size: 11px; border: 1px solid #E5E7EB;
+  background: #fff; border-radius: 4px; cursor: pointer; color: #374151;
+}
+.status-bar button.active { background: #7C3AED; color: #fff; border-color: #7C3AED; }
+
+/* Multi-select hint */
+.selection-hint {
+  position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+  background: #1F2937; color: #fff; padding: 8px 20px; border-radius: 8px;
+  font-size: 12px; font-weight: 500; z-index: 100; opacity: 0; transition: opacity 0.2s;
+  pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.selection-hint.visible { opacity: 1; }
+
+/* Slip preview modal */
+.slip-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5); z-index: 200; display: none;
+  align-items: center; justify-content: center;
+}
+.slip-overlay.active { display: flex; }
+.slip-container {
+  background: #fff; border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;
+  width: 340px;
+}
+.slip-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-bottom: 1px solid #E5E7EB;
+}
+.slip-modal-title { font-size: 13px; font-weight: 700; color: #111827; }
+.slip-close-btn {
+  width: 24px; height: 24px; border: none; background: none; cursor: pointer;
+  font-size: 16px; color: #6B7280; display: flex; align-items: center; justify-content: center;
+  border-radius: 4px;
+}
+.slip-close-btn:hover { background: #F3F4F6; color: #111827; }
+.slip-body { overflow-y: auto; padding: 0; }
+
+/* Thermal receipt style */
+.slip-receipt {
+  font-family: 'Courier New', 'D2Coding', monospace;
+  font-size: 11px; color: #111; padding: 20px 16px;
+  line-height: 1.6; background: #FEFEFE;
+}
+.slip-receipt .slip-header-title {
+  font-size: 14px; font-weight: 700; text-align: left;
+}
+.slip-receipt .slip-header-info {
+  font-size: 10px; color: #555; margin-bottom: 4px;
+}
+.slip-receipt .slip-divider {
+  border: none; border-top: 1px dashed #999; margin: 8px 0;
+}
+.slip-receipt .slip-section-title {
+  font-weight: 700; font-size: 11px; margin: 6px 0 2px;
+}
+.slip-receipt .slip-rx-table {
+  width: 100%; border-collapse: collapse; font-size: 10px; margin: 4px 0;
+}
+.slip-receipt .slip-rx-table th {
+  text-align: left; font-weight: 500; color: #666;
+  padding: 2px 0; border-bottom: 1px solid #ddd;
+}
+.slip-receipt .slip-rx-table td {
+  padding: 1px 0; vertical-align: top;
+}
+.slip-receipt .slip-rx-table .slip-rx-name { max-width: 140px; word-break: break-all; white-space: normal; }
+.slip-receipt .slip-rx-table .slip-rx-right { text-align: right; padding-left: 6px; white-space: nowrap; }
+.slip-receipt .slip-mix-label {
+  font-size: 10px; font-weight: 600; color: #333;
+  margin-top: 6px; padding: 2px 0;
+}
+.slip-receipt .slip-footer {
+  margin-top: 8px; font-size: 10px; color: #555;
+}
+.slip-receipt .slip-footer-row {
+  display: flex; justify-content: space-between; padding: 1px 0;
+}
+
+/* Slip preview button */
+.slip-preview-btn {
+  padding: 6px 14px; font-size: 11px; font-weight: 600;
+  background: #F3F4F6; border: 1px solid #D1D5DB; border-radius: 4px;
+  cursor: pointer; color: #374151; font-family: inherit;
+  transition: all 0.15s;
+}
+.slip-preview-btn:hover { background: #E5E7EB; border-color: #9CA3AF; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+</style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+<!-- Top Header -->
+<div class="top-header">
+  <div class="header-left">
+    <span class="title">진료</span>
+    <span class="chart-num">2398</span>
+    <span class="patient-name">테스트2</span>
+    <span class="patient-info">(남/52)</span>
+    <span class="patient-id">740112-1000002</span>
+    <span class="tag tag-success">재진</span>
+    <span class="tag tag-info">공단</span>
+    <div class="tabs">
+      <div class="tab active">진료</div>
+      <div class="tab">처방</div>
+      <div class="tab">검사</div>
+      <div class="tab">서식</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="online-dot"></span>
+    <span class="doctor-name">doctor 카야</span>
+  </div>
+</div>
+
+<!-- A/B Test Bar -->
+<div class="abtest-bar">
+  <div class="abtest-tab active-a" onclick="switchVariant('a')" id="abtab-a"><span class="tab-badge badge-a">A</span>A안: M 왼쪽 + 드롭다운 오른쪽</div>
+  <div class="abtest-tab" onclick="switchVariant('b')" id="abtab-b"><span class="tab-badge badge-b">B</span>B안: 드롭다운 왼쪽 + M 오른쪽</div>
+  <span class="abtest-desc">Cmd(Ctrl)+클릭으로 오더 다중선택 &rarr; MIX 드롭다운 일괄변경</span>
+</div>
+
+<!-- Syringe SVG icon template -->
+<svg style="display:none">
+  <symbol id="syringe-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="m18 2 4 4"/><path d="m17 7 3-3"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"/><path d="m9 11 4 4"/><path d="m5 19-3 3"/><path d="m14 4 6 6"/>
+  </symbol>
+  <symbol id="package-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" y1="22" x2="12" y2="12"/>
+  </symbol>
+  <symbol id="chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="9 18 15 12 9 6"/>
+  </symbol>
+</svg>
+
+<!-- Selection hint toast -->
+<div class="selection-hint" id="selectionHint"></div>
+
+<!-- Slip preview modal -->
+<div class="slip-overlay" id="slipOverlay" onclick="if(event.target===this)closeSlipPreview()">
+  <div class="slip-container">
+    <div class="slip-modal-header">
+      <span class="slip-modal-title">슬립지 미리보기</span>
+      <button class="slip-close-btn" onclick="closeSlipPreview()">&times;</button>
+    </div>
+    <div class="slip-body" id="slipBody"></div>
+  </div>
+</div>
+
+<!-- ==================== A안 ==================== -->
+<div class="abtest-panel active" id="variant-a">
+  <div class="content-area">
+    <div class="column column-1">
+      <div class="card patient-summary">
+        <div class="card-header">환자 진료이력 요약</div>
+        <div class="card-body">
+          <div class="summary-row"><span class="summary-label">주요 상병</span><span class="summary-value">본태성 고혈압, 2형 당뇨병</span></div>
+          <div class="summary-row"><span class="summary-label">알레르기</span><span class="summary-value" style="color:#EF4444;">페니실린, 아스피린</span></div>
+          <div class="summary-row"><span class="summary-label">최근 내원</span><span class="summary-value">2026-02-15 (내과)</span></div>
+          <div class="summary-row"><span class="summary-label">투약중</span><span class="summary-value">아모잘탄정, 메트포르민</span></div>
+          <div class="summary-row"><span class="summary-label">특이사항</span><span class="summary-value">-</span></div>
+        </div>
+      </div>
+      <div class="card flex-1">
+        <div class="card-header">내원이력</div>
+        <div class="card-body">
+          <div class="visit-item selected"><span class="visit-date">2026-03-06</span><span class="visit-dept">내과</span><span class="visit-doctor">카야</span></div>
+          <div class="visit-item"><span class="visit-date">2026-02-15</span><span class="visit-dept">내과</span><span class="visit-doctor">카야</span></div>
+          <div class="visit-item"><span class="visit-date">2026-01-20</span><span class="visit-dept">내과</span><span class="visit-doctor">카야</span></div>
+          <div class="visit-item"><span class="visit-date">2025-12-10</span><span class="visit-dept">피부과</span><span class="visit-doctor">이민수</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="column column-2">
+      <div class="card flex-1">
+        <div class="card-header">
+          진단 및 처방
+          <div style="flex:1"></div>
+          <div class="status-bar">
+            <button class="active">Dx</button><button>Rx</button><button>처치</button><button>검사</button>
+          </div>
+        </div>
+        <div class="card-body" style="padding:8px;">
+          <div style="margin-bottom:12px;">
+            <div class="section-table">
+              <table class="data-table"><thead><tr>
+                <th style="width:40px;">순</th><th style="width:50px;">상병코드</th><th style="min-width:150px;">명칭</th><th style="width:40px;">의증</th><th style="width:40px;">배제</th><th style="width:32px;">좌</th><th style="width:32px;">우</th><th style="width:60px;">진료과</th>
+              </tr></thead><tbody>
+                <tr><td>1</td><td>E11</td><td>2형 당뇨병</td><td></td><td></td><td></td><td></td><td>내과</td></tr>
+                <tr><td>2</td><td>I10</td><td>본태성 고혈압</td><td></td><td></td><td></td><td></td><td>내과</td></tr>
+              </tbody></table>
+            </div>
+            <div class="search-bar"><label>상병 검색</label><input type="text" class="search-input" placeholder="상병 검색"></div>
+          </div>
+          <div class="section-table flex-1" id="rxTableA">
+            <div class="card-body">
+            <table class="data-table"><thead><tr>
+              <th style="width:24px;"></th><th style="width:60px;">코드</th><th style="min-width:150px;">명칭</th><th style="width:40px;">용량</th><th style="width:36px;">일투</th><th style="width:36px;">일수</th><th style="width:40px;">용법</th><th style="width:56px;" class="mix-header">MIX</th><th style="width:50px;">특정내역</th><th style="width:32px;">청구</th><th style="width:56px;">수납방법</th>
+            </tr></thead><tbody id="rxBodyA">
+            </tbody></table>
+            </div>
+          </div>
+          <div class="search-bar"><label>처방 검색</label><input type="text" class="search-input" placeholder="처방 검색"></div>
+        </div>
+      </div>
+    </div>
+    <div class="column column-3">
+      <div class="card flex-1">
+        <div class="bp-header">
+          <span class="bp-title">묶음처방</span>
+          <button class="icon-btn" title="설정">&#9881;</button>
+          <button class="icon-btn">+</button>
+        </div>
+        <div class="bp-toolbar">
+          <input type="text" class="bp-search-input" placeholder="묶음처방 검색">
+        </div>
+        <div class="bp-content">
+          <div class="bp-list">
+            <div class="bp-cat">&#128193; 수액 세트</div>
+            <div class="bp-item selected">수액 INFUSION SET(Y)</div>
+            <div class="bp-item">항생제 IV SET</div>
+            <div class="bp-item">영양 수액 SET</div>
+          </div>
+          <div class="bp-detail">
+            <div class="bp-info">
+              <span>코드: <span class="bp-info-val">INF_SET_Y</span></span>
+              <span class="bp-info-sep">|</span>
+              <span>항목수: <span class="bp-info-val">15</span></span>
+            </div>
+            <div class="bp-section">
+              <div style="margin-bottom:4px;"><span class="bp-section-title">처방 항목</span></div>
+              <div class="bp-section-item">라이넥주(태반주사)</div>
+              <div class="bp-section-item">중외엔에스100ml</div>
+              <div class="bp-section-item">5%포도당키트250ml</div>
+              <div class="bp-section-item">녹십자생리식염키트250ml</div>
+              <div class="bp-section-item">멸균증류수(주사용수)200ml</div>
+              <div class="bp-section-item">푸르설타민주(마늘주사)</div>
+              <div class="bp-section-item">지씨비타오(B5)</div>
+              <div class="bp-section-item">메가비타식스(B6)</div>
+              <div class="bp-section-item">지씨비타일이(B12)</div>
+              <div class="bp-section-item">히시파겐씨주</div>
+              <div class="bp-section-item">메가그린(비타민C)</div>
+              <div class="bp-section-item">메가네슘주5ml</div>
+              <div class="bp-section-item">IV Filter SET</div>
+              <div class="bp-section-item">중외엔에스100ml</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="column column-4">
+      <div class="card symptoms-card">
+        <div class="card-header">증상</div>
+        <div class="card-body" style="padding:8px;">
+          <textarea class="textarea-field" rows="3" placeholder="환자 증상">어지러움, 두통 간헐적</textarea>
+          <div class="tag-row" style="margin-top:8px;">
+            <span class="tag-small">두통</span><span class="tag-small">어지러움</span>
+          </div>
+        </div>
+      </div>
+      <div class="card flex-1">
+        <div class="card-header">메모</div>
+        <div class="card-body" style="padding:8px;">
+          <textarea class="textarea-field" rows="3" placeholder="메모">HbA1c 재검 필요, 다음 내원 시 안저검사 예약</textarea>
+        </div>
+      </div>
+      <div class="card" style="height:150px;">
+        <div class="card-header">진료비</div>
+        <div class="card-body" style="padding:12px;">
+          <div class="summary-row"><span class="summary-label">총액</span><span class="summary-value" style="font-weight:600;">45,200원</span></div>
+          <div class="summary-row"><span class="summary-label">본인부담</span><span class="summary-value">13,560원</span></div>
+          <div style="margin-top:8px; text-align:right;">
+            <button class="slip-preview-btn" onclick="openSlipPreview('a')">슬립지 미리보기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== B안 ==================== -->
+<div class="abtest-panel" id="variant-b">
+  <div class="content-area">
+    <div class="column column-1">
+      <div class="card patient-summary">
+        <div class="card-header">환자 진료이력 요약</div>
+        <div class="card-body">
+          <div class="summary-row"><span class="summary-label">주요 상병</span><span class="summary-value">본태성 고혈압, 2형 당뇨병</span></div>
+          <div class="summary-row"><span class="summary-label">알레르기</span><span class="summary-value" style="color:#EF4444;">페니실린, 아스피린</span></div>
+          <div class="summary-row"><span class="summary-label">최근 내원</span><span class="summary-value">2026-02-15 (내과)</span></div>
+          <div class="summary-row"><span class="summary-label">투약중</span><span class="summary-value">아모잘탄정, 메트포르민</span></div>
+          <div class="summary-row"><span class="summary-label">특이사항</span><span class="summary-value">-</span></div>
+        </div>
+      </div>
+      <div class="card flex-1">
+        <div class="card-header">내원이력</div>
+        <div class="card-body">
+          <div class="visit-item selected"><span class="visit-date">2026-03-06</span><span class="visit-dept">내과</span><span class="visit-doctor">카야</span></div>
+          <div class="visit-item"><span class="visit-date">2026-02-15</span><span class="visit-dept">내과</span><span class="visit-doctor">카야</span></div>
+          <div class="visit-item"><span class="visit-date">2026-01-20</span><span class="visit-dept">내과</span><span class="visit-doctor">카야</span></div>
+          <div class="visit-item"><span class="visit-date">2025-12-10</span><span class="visit-dept">피부과</span><span class="visit-doctor">이민수</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="column column-2">
+      <div class="card flex-1">
+        <div class="card-header">
+          진단 및 처방
+          <div style="flex:1"></div>
+          <div class="status-bar">
+            <button class="active">Dx</button><button>Rx</button><button>처치</button><button>검사</button>
+          </div>
+        </div>
+        <div class="card-body" style="padding:8px;">
+          <div style="margin-bottom:12px;">
+            <div class="section-table">
+              <table class="data-table"><thead><tr>
+                <th style="width:40px;">순</th><th style="width:50px;">상병코드</th><th style="min-width:150px;">명칭</th><th style="width:40px;">의증</th><th style="width:40px;">배제</th><th style="width:32px;">좌</th><th style="width:32px;">우</th><th style="width:60px;">진료과</th>
+              </tr></thead><tbody>
+                <tr><td>1</td><td>E11</td><td>2형 당뇨병</td><td></td><td></td><td></td><td></td><td>내과</td></tr>
+                <tr><td>2</td><td>I10</td><td>본태성 고혈압</td><td></td><td></td><td></td><td></td><td>내과</td></tr>
+              </tbody></table>
+            </div>
+            <div class="search-bar"><label>상병 검색</label><input type="text" class="search-input" placeholder="상병 검색"></div>
+          </div>
+          <div class="section-table flex-1" id="rxTableB">
+            <div class="card-body">
+            <table class="data-table"><thead><tr>
+              <th style="width:24px;"></th><th style="width:60px;">코드</th><th style="min-width:150px;">명칭</th><th style="width:40px;">용량</th><th style="width:36px;">일투</th><th style="width:36px;">일수</th><th style="width:40px;">용법</th><th style="width:56px;" class="mix-header">MIX</th><th style="width:50px;">특정내역</th><th style="width:32px;">청구</th><th style="width:56px;">수납방법</th>
+            </tr></thead><tbody id="rxBodyB">
+            </tbody></table>
+            </div>
+          </div>
+          <div class="search-bar"><label>처방 검색</label><input type="text" class="search-input" placeholder="처방 검색"></div>
+        </div>
+      </div>
+    </div>
+    <div class="column column-3">
+      <div class="card flex-1">
+        <div class="bp-header">
+          <span class="bp-title">묶음처방</span>
+          <button class="icon-btn" title="설정">&#9881;</button>
+          <button class="icon-btn">+</button>
+        </div>
+        <div class="bp-toolbar">
+          <input type="text" class="bp-search-input" placeholder="묶음처방 검색">
+        </div>
+        <div class="bp-content">
+          <div class="bp-list">
+            <div class="bp-cat">&#128193; 수액 세트</div>
+            <div class="bp-item selected">수액 INFUSION SET(Y)</div>
+            <div class="bp-item">항생제 IV SET</div>
+            <div class="bp-item">영양 수액 SET</div>
+          </div>
+          <div class="bp-detail">
+            <div class="bp-info">
+              <span>코드: <span class="bp-info-val">INF_SET_Y</span></span>
+              <span class="bp-info-sep">|</span>
+              <span>항목수: <span class="bp-info-val">15</span></span>
+            </div>
+            <div class="bp-section">
+              <div style="margin-bottom:4px;"><span class="bp-section-title">처방 항목</span></div>
+              <div class="bp-section-item">라이넥주(태반주사)</div>
+              <div class="bp-section-item">중외엔에스100ml</div>
+              <div class="bp-section-item">5%포도당키트250ml</div>
+              <div class="bp-section-item">녹십자생리식염키트250ml</div>
+              <div class="bp-section-item">멸균증류수(주사용수)200ml</div>
+              <div class="bp-section-item">푸르설타민주(마늘주사)</div>
+              <div class="bp-section-item">지씨비타오(B5)</div>
+              <div class="bp-section-item">메가비타식스(B6)</div>
+              <div class="bp-section-item">지씨비타일이(B12)</div>
+              <div class="bp-section-item">히시파겐씨주</div>
+              <div class="bp-section-item">메가그린(비타민C)</div>
+              <div class="bp-section-item">메가네슘주5ml</div>
+              <div class="bp-section-item">IV Filter SET</div>
+              <div class="bp-section-item">중외엔에스100ml</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="column column-4">
+      <div class="card symptoms-card">
+        <div class="card-header">증상</div>
+        <div class="card-body" style="padding:8px;">
+          <textarea class="textarea-field" rows="3" placeholder="환자 증상">어지러움, 두통 간헐적</textarea>
+          <div class="tag-row" style="margin-top:8px;">
+            <span class="tag-small">두통</span><span class="tag-small">어지러움</span>
+          </div>
+        </div>
+      </div>
+      <div class="card flex-1">
+        <div class="card-header">메모</div>
+        <div class="card-body" style="padding:8px;">
+          <textarea class="textarea-field" rows="3" placeholder="메모">HbA1c 재검 필요, 다음 내원 시 안저검사 예약</textarea>
+        </div>
+      </div>
+      <div class="card" style="height:150px;">
+        <div class="card-header">진료비</div>
+        <div class="card-body" style="padding:12px;">
+          <div class="summary-row"><span class="summary-label">총액</span><span class="summary-value" style="font-weight:600;">45,200원</span></div>
+          <div class="summary-row"><span class="summary-label">본인부담</span><span class="summary-value">13,560원</span></div>
+          <div style="margin-top:8px; text-align:right;">
+            <button class="slip-preview-btn" onclick="openSlipPreview('b')">슬립지 미리보기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ===== Data =====
+var rxData = [
+  { code: 'lnx',     name: '라이넥주(태반주사)',           dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: true,  mix: '1', claim: 'Y', pay: '보험' },
+  { code: 'cwns100', name: '중외엔에스100ml',              dose: '1',  perDay: '1', days: '1', usage: 'IV', mActive: true,  mix: '1', claim: 'Y', pay: '보험' },
+  { code: 'dex250',  name: '5%포도당키트250ml',            dose: '1',  perDay: '1', days: '1', usage: 'IV', mActive: true,  mix: '1', claim: 'Y', pay: '보험' },
+  { code: 'ns250',   name: '녹십자생리식염키트250ml',      dose: '1',  perDay: '1', days: '1', usage: '',   mActive: false, mix: '-', claim: 'Y', pay: '보험' },
+  { code: 'sw200',   name: '멸균증류수(주사용수)200ml',    dose: '1',  perDay: '1', days: '1', usage: '',   mActive: false, mix: '-', claim: 'Y', pay: '보험' },
+  { code: 'furs',    name: '푸르설타민주(마늘주사)',        dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: true,  mix: '2', claim: 'Y', pay: '비급여' },
+  { code: 'gcb5',    name: '지씨비타오(B5)',               dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: true,  mix: '1', claim: 'Y', pay: '비급여' },
+  { code: 'mvb6',    name: '메가비타식스(B6)',             dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: true,  mix: '1', claim: 'Y', pay: '비급여' },
+  { code: 'gcb12',   name: '지씨비타일이(B12)',            dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: true,  mix: '1', claim: 'Y', pay: '비급여' },
+  { code: 'hspg',    name: '히시파겐씨주',                 dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: false, mix: '-', claim: 'Y', pay: '비급여' },
+  { code: 'mgvc',    name: '메가그린(비타민C)',            dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: true,  mix: '1', claim: 'Y', pay: '비급여' },
+  { code: 'mgns5',   name: '메가네슘주5ml',               dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: false, mix: '-', claim: 'Y', pay: '비급여' },
+  { code: 'ivfs',    name: 'IV Filter SET',                dose: '1',  perDay: '1', days: '1', usage: '',   mActive: false, mix: '-', claim: 'Y', pay: '비급여' },
+  { code: 'cwns100', name: '중외엔에스100ml',              dose: '1',  perDay: '1', days: '1', usage: 'IV', mActive: true,  mix: '1', claim: 'Y', pay: '보험' },
+];
+
+var bundleData = { code: 'infset', name: '수액 INFUSION SET(Y)', mActive: false, mix: '-' };
+
+// State per variant
+var stateA = { rows: JSON.parse(JSON.stringify(rxData)), bundle: JSON.parse(JSON.stringify(bundleData)), selected: new Set() };
+var stateB = { rows: JSON.parse(JSON.stringify(rxData)), bundle: JSON.parse(JSON.stringify(bundleData)), selected: new Set() };
+
+var currentVariant = 'a';
+
+function getState() { return currentVariant === 'a' ? stateA : stateB; }
+
+// ===== Render =====
+function renderTable(variant) {
+  var st = variant === 'a' ? stateA : stateB;
+  var tbody = document.getElementById('rxBody' + variant.toUpperCase());
+  tbody.innerHTML = '';
+
+  // Bundle row
+  var btr = document.createElement('tr');
+  btr.className = 'bundle-row';
+  var bundleIcon = '<td class="rx-icon-cell"><span class="bundle-toggle" onclick="toggleBundle(\'' + variant + '\')">&#9654;</span> <svg width="12" height="12" style="color:#3B82F6;vertical-align:middle;"><use href="#package-icon"/></svg></td>';
+  btr.innerHTML = bundleIcon +
+    '<td>' + st.bundle.code + '</td>' +
+    '<td style="font-weight:500;">' + st.bundle.name + '</td>' +
+    '<td></td><td></td><td></td><td></td>' +
+    '<td class="mix-cell">' + buildMixCell(variant, -1, st.bundle.mActive, st.bundle.mix) + '</td>' +
+    '<td></td><td></td><td></td>';
+  tbody.appendChild(btr);
+
+  // Sort rows by MIX grouping: M-active rows are group headers, same-number rows follow
+  var sortedIndices = sortByMixGroup(st.rows);
+
+  sortedIndices.forEach(function(i) {
+    var row = st.rows[i];
+    var tr = document.createElement('tr');
+    var isGroupHeader = row.mActive && row.mix !== '-';
+    tr.className = 'rx-row' + (st.selected.has(i) ? ' multi-selected' : '') + (isGroupHeader ? ' mix-group-header' : '');
+    tr.dataset.index = i;
+    tr.innerHTML =
+      '<td class="rx-icon-cell"><svg width="12" height="12" style="color:' + (isGroupHeader ? '#3B82F6' : '#9CA3AF') + ';vertical-align:middle;"><use href="#syringe-icon"/></svg></td>' +
+      '<td>' + row.code + '</td>' +
+      '<td class="rx-name-cell" onclick="handleNameClick(event, \'' + variant + '\', ' + i + ')">' + row.name + '</td>' +
+      '<td>' + row.dose + '</td>' +
+      '<td>' + row.perDay + '</td>' +
+      '<td>' + row.days + '</td>' +
+      '<td>' + row.usage + '</td>' +
+      '<td class="mix-cell">' + buildMixCell(variant, i, row.mActive, row.mix) + '</td>' +
+      '<td></td>' +
+      '<td>' + row.claim + '</td>' +
+      '<td>' + row.pay + '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+// Sort rows: group by MIX number, M-active rows as headers first, then same-number non-M rows, then ungrouped
+function sortByMixGroup(rows) {
+  // Collect MIX groups: find all unique non-'-' mix values
+  var groups = {}; // mix value -> { headers: [indices], members: [indices] }
+  var ungrouped = []; // rows with mix '-'
+
+  rows.forEach(function(row, i) {
+    if (row.mix === '-') {
+      ungrouped.push(i);
+    } else {
+      if (!groups[row.mix]) groups[row.mix] = { headers: [], members: [] };
+      if (row.mActive) {
+        groups[row.mix].headers.push(i);
+      } else {
+        groups[row.mix].members.push(i);
+      }
+    }
+  });
+
+  // Build sorted order: groups sorted by mix number, then ungrouped
+  var result = [];
+  var mixNums = Object.keys(groups).sort(function(a, b) { return Number(a) - Number(b); });
+
+  mixNums.forEach(function(num) {
+    var g = groups[num];
+    // Headers first (M-active with this number)
+    g.headers.forEach(function(i) { result.push(i); });
+    // Then members (non-M with this number)
+    g.members.forEach(function(i) { result.push(i); });
+  });
+
+  // Ungrouped rows (mix '-') at the end
+  ungrouped.forEach(function(i) { result.push(i); });
+
+  return result;
+}
+
+function buildMixCell(variant, index, mActive, mixVal) {
+  var mBtnClass = mActive ? 'active' : 'inactive';
+  var mBtn = '<button class="m-btn ' + mBtnClass + '" onclick="toggleM(event, \'' + variant + '\', ' + index + ')">M</button>';
+
+  var options = '<option value="-"' + (mixVal === '-' ? ' selected' : '') + '>-</option>';
+  for (var n = 1; n <= 4; n++) {
+    options += '<option value="' + n + '"' + (mixVal === String(n) ? ' selected' : '') + '>' + n + '</option>';
+  }
+  var dropdown = '<select class="mix-dropdown" onchange="handleMixChange(event, \'' + variant + '\', ' + index + ')">' + options + '</select>';
+
+  if (variant === 'a') {
+    return '<span class="mix-cell-inner">' + mBtn + dropdown + '</span>';
+  } else {
+    return '<span class="mix-cell-inner">' + dropdown + mBtn + '</span>';
+  }
+}
+
+// ===== Interaction =====
+function handleNameClick(e, variant, index) {
+  var st = variant === 'a' ? stateA : stateB;
+
+  if (e.metaKey || e.ctrlKey) {
+    // Toggle selection
+    if (st.selected.has(index)) {
+      st.selected.delete(index);
+    } else {
+      st.selected.add(index);
+    }
+  } else {
+    // Single click: clear all and select this one
+    st.selected.clear();
+    st.selected.add(index);
+  }
+  renderTable(variant);
+  showSelectionHint(st.selected.size);
+}
+
+function toggleM(e, variant, index) {
+  e.stopPropagation();
+  var st = variant === 'a' ? stateA : stateB;
+
+  if (index === -1) {
+    // Bundle M toggle
+    st.bundle.mActive = !st.bundle.mActive;
+  } else {
+    // Individual M toggle - always individual, even in multi-select
+    st.rows[index].mActive = !st.rows[index].mActive;
+  }
+  renderTable(variant);
+}
+
+function handleMixChange(e, variant, index) {
+  e.stopPropagation();
+  var newVal = e.target.value;
+  var st = variant === 'a' ? stateA : stateB;
+
+  if (index === -1) {
+    // Bundle dropdown
+    st.bundle.mix = newVal;
+    renderTable(variant);
+    return;
+  }
+
+  if (st.selected.size > 1 && st.selected.has(index)) {
+    // Multi-select: apply to all selected rows
+    st.selected.forEach(function(i) {
+      st.rows[i].mix = newVal;
+    });
+    showSelectionHint(st.selected.size, newVal);
+  } else {
+    // Single: apply to this row only
+    st.rows[index].mix = newVal;
+  }
+  renderTable(variant);
+}
+
+function toggleBundle(variant) {
+  var tbody = document.getElementById('rxBody' + variant.toUpperCase());
+  var toggle = tbody.querySelector('.bundle-toggle');
+  var rows = tbody.querySelectorAll('.rx-row');
+
+  if (toggle.classList.contains('collapsed')) {
+    toggle.classList.remove('collapsed');
+    rows.forEach(function(r) { r.style.display = ''; });
+  } else {
+    toggle.classList.add('collapsed');
+    rows.forEach(function(r) { r.style.display = 'none'; });
+  }
+}
+
+// ===== Toast =====
+var hintTimer;
+function showSelectionHint(count, val) {
+  var hint = document.getElementById('selectionHint');
+  if (count > 1) {
+    if (val !== undefined) {
+      hint.textContent = count + '개 오더 MIX 값이 "' + val + '"(으)로 일괄 변경되었습니다';
+    } else {
+      hint.textContent = count + '개 오더 선택됨 (MIX 드롭다운 변경 시 일괄 적용)';
+    }
+    hint.classList.add('visible');
+  } else {
+    hint.classList.remove('visible');
+  }
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(function() {
+    if (val !== undefined) hint.classList.remove('visible');
+  }, 2000);
+}
+
+// ===== Variant switch =====
+function switchVariant(v) {
+  document.querySelectorAll('.abtest-panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.abtest-tab').forEach(function(t) { t.className = 'abtest-tab'; });
+  document.getElementById('variant-' + v).classList.add('active');
+  document.getElementById('abtab-' + v).classList.add('active-' + v);
+  currentVariant = v;
+}
+
+// Clear selection when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.rx-name-cell') && !e.target.closest('.mix-dropdown') && !e.target.closest('.m-btn')) {
+    var st = getState();
+    if (st.selected.size > 0) {
+      st.selected.clear();
+      renderTable(currentVariant);
+      document.getElementById('selectionHint').classList.remove('visible');
+    }
+  }
+});
+
+// ===== Slip Preview =====
+function openSlipPreview(variant) {
+  var st = variant === 'a' ? stateA : stateB;
+  var now = new Date();
+  var dateStr = now.getFullYear() + '-' + pad2(now.getMonth()+1) + '-' + pad2(now.getDate());
+  var timeStr = pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds());
+
+  var html = '<div class="slip-receipt">';
+
+  // Symptoms
+  html += '<div class="slip-section-title">증상</div>';
+  html += '<div style="font-size:10px; margin-bottom:4px;">어지러움, 두통 간헐적</div>';
+
+  // Diagnosis
+  html += '<div class="slip-section-title">병명</div>';
+  html += '<div style="font-size:10px;">E11 2형 당뇨병</div>';
+  html += '<div style="font-size:10px; margin-bottom:4px;">I10 본태성 고혈압</div>';
+  html += '<hr class="slip-divider">';
+
+  // 처방 내역 (종류별 구분)
+  html += '<div class="slip-section-title">처방 내역</div>';
+  html += '<table class="slip-rx-table"><thead><tr>';
+  html += '<th class="slip-rx-name">명칭</th>';
+  html += '<th class="slip-rx-right">용량</th>';
+  html += '<th class="slip-rx-right">일투</th>';
+  html += '<th class="slip-rx-right">일수</th>';
+  html += '<th class="slip-rx-right">용법</th>';
+  html += '</tr></thead><tbody>';
+
+  // Group rows by MIX for slip display (종류별 구분)
+  var sorted = sortByMixGroup(st.rows);
+  var currentMix = null;
+
+  sorted.forEach(function(i) {
+    var row = st.rows[i];
+    // Show MIX group label (종류별 구분)
+    if (row.mix !== '-' && row.mix !== currentMix) {
+      currentMix = row.mix;
+      html += '<tr><td colspan="5" class="slip-mix-label" style="padding-top:6px;">MIX ' + row.mix + '</td></tr>';
+    } else if (row.mix === '-' && currentMix !== '-') {
+      currentMix = '-';
+      html += '<tr><td colspan="5" class="slip-mix-label" style="padding-top:6px;">개별</td></tr>';
+    }
+
+    var usageStr = row.usage || '';
+
+    html += '<tr>';
+    html += '<td class="slip-rx-name">' + row.name + '</td>';
+    html += '<td class="slip-rx-right">' + row.dose + '</td>';
+    html += '<td class="slip-rx-right">' + row.perDay + '</td>';
+    html += '<td class="slip-rx-right">' + row.days + '</td>';
+    html += '<td class="slip-rx-right">' + usageStr + '</td>';
+    html += '</tr>';
+  });
+
+  // 수액 INFUSION SET(Y)도 개별 처방 항목으로 포함
+  html += '<tr>';
+  html += '<td class="slip-rx-name">' + st.bundle.name + '</td>';
+  html += '<td class="slip-rx-right">1</td>';
+  html += '<td class="slip-rx-right">1</td>';
+  html += '<td class="slip-rx-right">1</td>';
+  html += '<td class="slip-rx-right"></td>';
+  html += '</tr>';
+
+  html += '</tbody></table>';
+  html += '<hr class="slip-divider">';
+
+  // Instructions
+  html += '<div class="slip-section-title">지시오더</div>';
+  html += '<div style="font-size:10px; margin-bottom:4px;">수액 주사 투여, 30분 경과 관찰</div>';
+  html += '<hr class="slip-divider">';
+
+  // Footer
+  html += '<div class="slip-footer">';
+  html += '<div class="slip-footer-row"><span>진료의:</span><span>doctor 카야</span></div>';
+  html += '<div class="slip-footer-row"><span>진료시간:</span><span>' + dateStr + ' ' + timeStr + '</span></div>';
+  html += '<div class="slip-footer-row"><span>출력시간:</span><span>' + dateStr + ' ' + timeStr + '</span></div>';
+  html += '<div class="slip-footer-row" style="margin-top:4px;"><span>수납액:</span><span style="font-weight:700;">13,560원</span></div>';
+  html += '<div class="slip-footer-row"><span>종류:</span><span>' + (variant === 'a' ? 'A안' : 'B안') + ' MIX 처방</span></div>';
+  html += '</div>';
+
+  html += '</div>';
+
+  document.getElementById('slipBody').innerHTML = html;
+  document.getElementById('slipOverlay').classList.add('active');
+}
+
+function closeSlipPreview() {
+  document.getElementById('slipOverlay').classList.remove('active');
+}
+
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+// Init
+renderTable('a');
+renderTable('b');
+</script>
+
+</body>
+</html>
