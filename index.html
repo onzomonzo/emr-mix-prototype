@@ -889,16 +889,6 @@ function openSlipPreview(variant) {
 
   var html = '<div class="slip-receipt">';
 
-  // Symptoms
-  html += '<div class="slip-section-title">증상</div>';
-  html += '<div style="font-size:10px; margin-bottom:4px;">어지러움, 두통 간헐적</div>';
-
-  // Diagnosis
-  html += '<div class="slip-section-title">병명</div>';
-  html += '<div style="font-size:10px;">E11 2형 당뇨병</div>';
-  html += '<div style="font-size:10px; margin-bottom:4px;">I10 본태성 고혈압</div>';
-  html += '<hr class="slip-divider">';
-
   // 처방 내역 (종류별 구분)
   html += '<div class="slip-section-title">처방 내역</div>';
   html += '<table class="slip-rx-table"><thead><tr>';
@@ -936,11 +926,6 @@ function openSlipPreview(variant) {
   });
 
   html += '</tbody></table>';
-  html += '<hr class="slip-divider">';
-
-  // Instructions
-  html += '<div class="slip-section-title">지시오더</div>';
-  html += '<div style="font-size:10px; margin-bottom:4px;">수액 주사 투여, 30분 경과 관찰</div>';
   html += '<hr class="slip-divider">';
 
   // Footer
