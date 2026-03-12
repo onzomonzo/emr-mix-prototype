@@ -128,14 +128,29 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
 .m-btn.inactive { background: #D1D5DB; color: #9CA3AF; }
 .m-btn:hover { opacity: 0.85; }
 
-/* MIX dropdown */
-.mix-dropdown {
-  height: 18px; border: 1px solid #D1D5DB; border-radius: 3px;
-  background: #fff; font-size: 9px; font-weight: 500; color: #374151;
-  padding: 0 2px; cursor: pointer; outline: none;
-  font-family: inherit; min-width: 32px;
+/* MIX custom dropdown */
+.mix-dropdown-wrap { position: relative; display: inline-block; }
+.mix-dropdown-btn {
+  height: 18px; min-width: 22px; border: 1px solid #D1D5DB; border-radius: 3px;
+  background: #fff; font-size: 9px; font-weight: 600; color: #374151;
+  padding: 0 5px; cursor: pointer; outline: none;
+  font-family: inherit; display: inline-flex; align-items: center; justify-content: center;
+  line-height: 1; transition: all 0.1s;
 }
-.mix-dropdown:focus { border-color: #3B82F6; }
+.mix-dropdown-btn:hover { border-color: #9CA3AF; background: #F9FAFB; }
+.mix-dropdown-menu {
+  display: none; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  margin-top: 2px; background: #fff; border: 1px solid #D1D5DB; border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12); z-index: 50; min-width: 32px;
+  overflow: hidden;
+}
+.mix-dropdown-menu.open { display: block; }
+.mix-dropdown-opt {
+  padding: 3px 8px; font-size: 9px; font-weight: 500; color: #374151;
+  cursor: pointer; text-align: center; white-space: nowrap;
+}
+.mix-dropdown-opt:hover { background: #EFF6FF; color: #1D4ED8; }
+.mix-dropdown-opt.selected { background: #DBEAFE; color: #1D4ED8; font-weight: 700; }
 
 /* MIX group header */
 .mix-group-header {
@@ -420,7 +435,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
             </tbody></table>
             </div>
           </div>
-          <div class="search-bar"><label>처방 검색</label><input type="text" class="search-input" placeholder="처방 검색"></div>
+          <div class="search-bar"><label>처방 검색</label><input type="text" class="search-input" placeholder="처방 검색"><button class="slip-preview-btn" onclick="openSlipPreview('a')" style="margin-left:auto;">슬립지 미리보기</button></div>
         </div>
       </div>
     </div>
@@ -484,14 +499,11 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
           <textarea class="textarea-field" rows="3" placeholder="메모">HbA1c 재검 필요, 다음 내원 시 안저검사 예약</textarea>
         </div>
       </div>
-      <div class="card" style="height:150px;">
+      <div class="card" style="height:120px;">
         <div class="card-header">진료비</div>
         <div class="card-body" style="padding:12px;">
           <div class="summary-row"><span class="summary-label">총액</span><span class="summary-value" style="font-weight:600;">45,200원</span></div>
           <div class="summary-row"><span class="summary-label">본인부담</span><span class="summary-value">13,560원</span></div>
-          <div style="margin-top:8px; text-align:right;">
-            <button class="slip-preview-btn" onclick="openSlipPreview('a')">슬립지 미리보기</button>
-          </div>
         </div>
       </div>
     </div>
@@ -551,7 +563,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
             </tbody></table>
             </div>
           </div>
-          <div class="search-bar"><label>처방 검색</label><input type="text" class="search-input" placeholder="처방 검색"></div>
+          <div class="search-bar"><label>처방 검색</label><input type="text" class="search-input" placeholder="처방 검색"><button class="slip-preview-btn" onclick="openSlipPreview('b')" style="margin-left:auto;">슬립지 미리보기</button></div>
         </div>
       </div>
     </div>
@@ -615,14 +627,11 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
           <textarea class="textarea-field" rows="3" placeholder="메모">HbA1c 재검 필요, 다음 내원 시 안저검사 예약</textarea>
         </div>
       </div>
-      <div class="card" style="height:150px;">
+      <div class="card" style="height:120px;">
         <div class="card-header">진료비</div>
         <div class="card-body" style="padding:12px;">
           <div class="summary-row"><span class="summary-label">총액</span><span class="summary-value" style="font-weight:600;">45,200원</span></div>
           <div class="summary-row"><span class="summary-label">본인부담</span><span class="summary-value">13,560원</span></div>
-          <div style="margin-top:8px; text-align:right;">
-            <button class="slip-preview-btn" onclick="openSlipPreview('b')">슬립지 미리보기</button>
-          </div>
         </div>
       </div>
     </div>
@@ -648,13 +657,12 @@ var rxData = [
   { code: 'mgns5',   name: '메가네슘주5ml',               dose: '1A', perDay: '1', days: '1', usage: 'IV', mActive: false, mix: '-', claim: 'Y', pay: '비급여' },
   { code: 'ivfs',    name: 'IV Filter SET',                dose: '1',  perDay: '1', days: '1', usage: '',   mActive: false, mix: '-', claim: 'Y', pay: '비급여' },
   { code: 'cwns100', name: '중외엔에스100ml',              dose: '1',  perDay: '1', days: '1', usage: 'IV', mActive: false, mix: '-', claim: 'Y', pay: '보험' },
+  { code: 'infset',  name: '수액 INFUSION SET(Y)',         dose: '1',  perDay: '1', days: '1', usage: '',   mActive: false, mix: '-', claim: 'Y', pay: '비급여' },
 ];
 
-var bundleData = { code: 'infset', name: '수액 INFUSION SET(Y)', mActive: false, mix: '-' };
-
 // State per variant
-var stateA = { rows: JSON.parse(JSON.stringify(rxData)), bundle: JSON.parse(JSON.stringify(bundleData)), selected: new Set() };
-var stateB = { rows: JSON.parse(JSON.stringify(rxData)), bundle: JSON.parse(JSON.stringify(bundleData)), selected: new Set() };
+var stateA = { rows: JSON.parse(JSON.stringify(rxData)), selected: new Set() };
+var stateB = { rows: JSON.parse(JSON.stringify(rxData)), selected: new Set() };
 
 var currentVariant = 'a';
 
@@ -665,18 +673,6 @@ function renderTable(variant) {
   var st = variant === 'a' ? stateA : stateB;
   var tbody = document.getElementById('rxBody' + variant.toUpperCase());
   tbody.innerHTML = '';
-
-  // Bundle row
-  var btr = document.createElement('tr');
-  btr.className = 'bundle-row';
-  var bundleIcon = '<td class="rx-icon-cell"><span class="bundle-toggle" onclick="toggleBundle(\'' + variant + '\')">&#9654;</span> <svg width="12" height="12" style="color:#3B82F6;vertical-align:middle;"><use href="#package-icon"/></svg></td>';
-  btr.innerHTML = bundleIcon +
-    '<td>' + st.bundle.code + '</td>' +
-    '<td style="font-weight:500;">' + st.bundle.name + '</td>' +
-    '<td></td><td></td><td></td><td></td>' +
-    '<td class="mix-cell">' + buildMixCell(variant, -1, st.bundle.mActive, st.bundle.mix) + '</td>' +
-    '<td></td><td></td><td></td>';
-  tbody.appendChild(btr);
 
   // Sort rows by MIX grouping: M-active rows are group headers, same-number rows follow
   var sortedIndices = sortByMixGroup(st.rows);
@@ -744,11 +740,15 @@ function buildMixCell(variant, index, mActive, mixVal) {
   var mBtnClass = mActive ? 'active' : 'inactive';
   var mBtn = '<button class="m-btn ' + mBtnClass + '" onclick="toggleM(event, \'' + variant + '\', ' + index + ')">M</button>';
 
-  var options = '<option value="-"' + (mixVal === '-' ? ' selected' : '') + '>-</option>';
-  for (var n = 1; n <= 4; n++) {
-    options += '<option value="' + n + '"' + (mixVal === String(n) ? ' selected' : '') + '>' + n + '</option>';
-  }
-  var dropdown = '<select class="mix-dropdown" onchange="handleMixChange(event, \'' + variant + '\', ' + index + ')">' + options + '</select>';
+  var vals = ['-', '1', '2', '3', '4'];
+  var opts = '';
+  vals.forEach(function(v) {
+    opts += '<div class="mix-dropdown-opt' + (mixVal === v ? ' selected' : '') + '" onclick="selectMixOpt(event, \'' + variant + '\', ' + index + ', \'' + v + '\')">' + v + '</div>';
+  });
+  var dropdown = '<span class="mix-dropdown-wrap">' +
+    '<button class="mix-dropdown-btn" onclick="toggleMixMenu(event, this)">' + mixVal + '</button>' +
+    '<div class="mix-dropdown-menu">' + opts + '</div>' +
+    '</span>';
 
   if (variant === 'a') {
     return '<span class="mix-cell-inner">' + mBtn + dropdown + '</span>';
@@ -791,26 +791,31 @@ function toggleM(e, variant, index) {
   renderTable(variant);
 }
 
-function handleMixChange(e, variant, index) {
+function toggleMixMenu(e, btn) {
   e.stopPropagation();
-  var newVal = e.target.value;
+  // Close all other open menus first
+  document.querySelectorAll('.mix-dropdown-menu.open').forEach(function(m) {
+    if (m !== btn.nextElementSibling) m.classList.remove('open');
+  });
+  btn.nextElementSibling.classList.toggle('open');
+}
+
+function selectMixOpt(e, variant, index, newVal) {
+  e.stopPropagation();
   var st = variant === 'a' ? stateA : stateB;
 
   if (index === -1) {
-    // Bundle dropdown
     st.bundle.mix = newVal;
     renderTable(variant);
     return;
   }
 
   if (st.selected.size > 1 && st.selected.has(index)) {
-    // Multi-select: apply to all selected rows
     st.selected.forEach(function(i) {
       st.rows[i].mix = newVal;
     });
     showSelectionHint(st.selected.size, newVal);
   } else {
-    // Single: apply to this row only
     st.rows[index].mix = newVal;
   }
   renderTable(variant);
@@ -859,9 +864,13 @@ function switchVariant(v) {
   currentVariant = v;
 }
 
-// Clear selection when clicking outside
+// Clear selection and close menus when clicking outside
 document.addEventListener('click', function(e) {
-  if (!e.target.closest('.rx-name-cell') && !e.target.closest('.mix-dropdown') && !e.target.closest('.m-btn')) {
+  // Close any open mix dropdown menus
+  if (!e.target.closest('.mix-dropdown-wrap')) {
+    document.querySelectorAll('.mix-dropdown-menu.open').forEach(function(m) { m.classList.remove('open'); });
+  }
+  if (!e.target.closest('.rx-name-cell') && !e.target.closest('.mix-dropdown-wrap') && !e.target.closest('.m-btn')) {
     var st = getState();
     if (st.selected.size > 0) {
       st.selected.clear();
@@ -925,15 +934,6 @@ function openSlipPreview(variant) {
     html += '<td class="slip-rx-right">' + usageStr + '</td>';
     html += '</tr>';
   });
-
-  // 수액 INFUSION SET(Y)도 개별 처방 항목으로 포함
-  html += '<tr>';
-  html += '<td class="slip-rx-name">' + st.bundle.name + '</td>';
-  html += '<td class="slip-rx-right">1</td>';
-  html += '<td class="slip-rx-right">1</td>';
-  html += '<td class="slip-rx-right">1</td>';
-  html += '<td class="slip-rx-right"></td>';
-  html += '</tr>';
 
   html += '</tbody></table>';
   html += '<hr class="slip-divider">';
