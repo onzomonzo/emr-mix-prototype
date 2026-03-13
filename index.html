@@ -962,35 +962,42 @@ function showCtxMenu(x, y) {
   while (existingGroups[String(nextNew)]) nextNew++;
   if (nextNew > 4) nextNew = null; // Max 4 MIX groups
 
+  // Check if any selected rows have MIX assigned
+  var anyHasMix = false;
+  st.selected.forEach(function(i) {
+    if (st.rows[i].mix !== '-') anyHasMix = true;
+  });
+
   var html = '';
 
-  // "MIX 지정" - creates new group with next available number
+  // "MIX 지정" with 2-level submenu
+  html += '<div class="ctx-menu-sub">';
+  html += '<div class="ctx-menu-item">MIX 지정 <span style="margin-left:auto;font-size:10px;">▶</span></div>';
+  html += '<div class="ctx-submenu">';
+
+  // New MIX group option
   if (nextNew) {
-    html += '<div class="ctx-menu-item" onclick="assignNewMix()">MIX 지정 <span style="font-size:10px;color:#9CA3AF;margin-left:auto;">→ MIX' + nextNew + '</span></div>';
+    html += '<div class="ctx-menu-item" onclick="assignNewMix()">새 MIX 그룹 <span style="font-size:10px;color:#9CA3AF;margin-left:auto;">MIX' + nextNew + '</span></div>';
   }
 
-  // Existing groups submenu
+  // Existing MIX groups to join
   if (groupNums.length > 0) {
-    html += '<div class="ctx-menu-sub">';
-    html += '<div class="ctx-menu-item">기존 MIX에 편입 <span style="margin-left:auto;font-size:10px;">▶</span></div>';
-    html += '<div class="ctx-submenu">';
+    html += '<div style="border-top:1px solid #E5E7EB;margin:2px 0;"></div>';
     groupNums.forEach(function(n) {
       var badgeColor = ['','#3B82F6','#F59E0B','#10B981','#8B5CF6'][Number(n)] || '#6B7280';
       html += '<div class="ctx-menu-item" onclick="assignToMix(\'' + n + '\')">';
       html += '<span class="mix-badge-sm" style="background:' + badgeColor + ';"></span>';
       html += 'MIX' + n + '</div>';
     });
-    html += '</div></div>';
   }
 
-  // Check if any selected rows have MIX assigned
-  var anyHasMix = false;
-  st.selected.forEach(function(i) {
-    if (st.rows[i].mix !== '-') anyHasMix = true;
-  });
+  // 해제 option (same level as MIX groups)
   if (anyHasMix) {
-    html += '<div class="ctx-menu-item danger" onclick="releaseMix()">MIX 해제</div>';
+    html += '<div style="border-top:1px solid #E5E7EB;margin:2px 0;"></div>';
+    html += '<div class="ctx-menu-item danger" onclick="releaseMix()">해제</div>';
   }
+
+  html += '</div></div>';
 
   // 약품정보조회
   html += '<div class="ctx-menu-item" style="border-top:1px solid #E5E7EB;margin-top:2px;padding-top:8px;" onclick="closeCtxMenu()">약품정보조회</div>';
