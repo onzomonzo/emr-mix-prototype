@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EMR MIX 칼럼 A/B 테스트</title>
+<title>EMR MIX 칼럼 A/B/C 테스트</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -50,6 +50,8 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
 }
 .badge-a { background: #7C3AED; }
 .badge-b { background: #2563EB; }
+.badge-c { background: #059669; }
+.abtest-tab.active-c { color: #059669; border-bottom-color: #059669; font-weight: 700; }
 .abtest-desc {
   margin-left: 24px; font-size: 11px; color: #9CA3AF; font-style: italic;
 }
@@ -239,6 +241,43 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
 }
 .selection-hint.visible { opacity: 1; }
 
+/* C안: MIX badge on name */
+.mix-badge {
+  display: inline-block; padding: 1px 6px; border-radius: 3px;
+  font-size: 9px; font-weight: 700; color: #fff; margin-right: 4px;
+  background: #6B7280; line-height: 1.4; vertical-align: middle;
+}
+.mix-badge.mix-1 { background: #3B82F6; }
+.mix-badge.mix-2 { background: #F59E0B; }
+.mix-badge.mix-3 { background: #10B981; }
+.mix-badge.mix-4 { background: #8B5CF6; }
+
+/* C안: Context menu */
+.ctx-menu {
+  position: fixed; background: #fff; border: 1px solid #D1D5DB; border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15); z-index: 300; min-width: 140px;
+  padding: 4px 0; display: none; font-size: 12px;
+}
+.ctx-menu.open { display: block; }
+.ctx-menu-item {
+  padding: 6px 14px; cursor: pointer; color: #374151; display: flex;
+  align-items: center; gap: 8px;
+}
+.ctx-menu-item:hover { background: #F3F4F6; }
+.ctx-menu-item.danger { color: #EF4444; }
+.ctx-menu-sub {
+  position: relative;
+}
+.ctx-menu-sub .ctx-submenu {
+  display: none; position: absolute; left: 100%; top: -4px;
+  background: #fff; border: 1px solid #D1D5DB; border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15); min-width: 100px; padding: 4px 0;
+}
+.ctx-menu-sub:hover .ctx-submenu { display: block; }
+.ctx-menu-item .mix-badge-sm {
+  display: inline-block; width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0;
+}
+
 /* Slip preview modal */
 .slip-overlay {
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -352,7 +391,8 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
 <div class="abtest-bar">
   <div class="abtest-tab active-a" onclick="switchVariant('a')" id="abtab-a"><span class="tab-badge badge-a">A</span>A안: M 왼쪽 + 드롭다운 오른쪽</div>
   <div class="abtest-tab" onclick="switchVariant('b')" id="abtab-b"><span class="tab-badge badge-b">B</span>B안: 드롭다운 왼쪽 + M 오른쪽</div>
-  <span class="abtest-desc">Cmd(Ctrl)+클릭으로 오더 다중선택 &rarr; MIX 드롭다운 일괄변경</span>
+  <div class="abtest-tab" onclick="switchVariant('c')" id="abtab-c"><span class="tab-badge badge-c">C</span>C안: 우클릭 MIX 지정 + 뱃지</div>
+  <span class="abtest-desc">A/B: Cmd+클릭 다중선택 &rarr; 드롭다운 일괄변경 | C: 다중선택 &rarr; 우클릭 MIX 지정</span>
 </div>
 
 <!-- Syringe SVG icon template -->
@@ -638,6 +678,137 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
   </div>
 </div>
 
+<!-- ==================== C안 ==================== -->
+<div class="abtest-panel" id="variant-c">
+  <div class="content-area">
+    <div class="column column-1">
+      <div class="card patient-summary">
+        <div class="card-header">환자 진료이력 요약</div>
+        <div class="card-body">
+          <div class="summary-row"><span class="summary-label">주요 상병</span><span class="summary-value">본태성 고혈압, 2형 당뇨병</span></div>
+          <div class="summary-row"><span class="summary-label">알레르기</span><span class="summary-value" style="color:#EF4444;">페니실린, 아스피린</span></div>
+          <div class="summary-row"><span class="summary-label">최근 내원</span><span class="summary-value">2026-02-15 (내과)</span></div>
+          <div class="summary-row"><span class="summary-label">투약중</span><span class="summary-value">아모잘탄정, 메트포르민</span></div>
+          <div class="summary-row"><span class="summary-label">특이사항</span><span class="summary-value">-</span></div>
+        </div>
+      </div>
+      <div class="card flex-1">
+        <div class="card-header">내원이력</div>
+        <div class="card-body">
+          <div class="visit-item selected"><span class="visit-date">2026-03-06</span><span class="visit-dept">내과</span><span class="visit-doctor">카야</span></div>
+          <div class="visit-item"><span class="visit-date">2026-02-15</span><span class="visit-dept">내과</span><span class="visit-doctor">카야</span></div>
+          <div class="visit-item"><span class="visit-date">2026-01-20</span><span class="visit-dept">내과</span><span class="visit-doctor">카야</span></div>
+          <div class="visit-item"><span class="visit-date">2025-12-10</span><span class="visit-dept">피부과</span><span class="visit-doctor">이민수</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="column column-2">
+      <div class="card flex-1">
+        <div class="card-header">
+          진단 및 처방
+          <div style="flex:1"></div>
+          <div class="status-bar">
+            <button class="active">Dx</button><button>Rx</button><button>처치</button><button>검사</button>
+          </div>
+        </div>
+        <div class="card-body" style="padding:8px;">
+          <div style="margin-bottom:12px;">
+            <div class="section-table">
+              <table class="data-table"><thead><tr>
+                <th style="width:40px;">순</th><th style="width:50px;">상병코드</th><th style="min-width:150px;">명칭</th><th style="width:40px;">의증</th><th style="width:40px;">배제</th><th style="width:32px;">좌</th><th style="width:32px;">우</th><th style="width:60px;">진료과</th>
+              </tr></thead><tbody>
+                <tr><td>1</td><td>E11</td><td>2형 당뇨병</td><td></td><td></td><td></td><td></td><td>내과</td></tr>
+                <tr><td>2</td><td>I10</td><td>본태성 고혈압</td><td></td><td></td><td></td><td></td><td>내과</td></tr>
+              </tbody></table>
+            </div>
+            <div class="search-bar"><label>상병 검색</label><input type="text" class="search-input" placeholder="상병 검색"></div>
+          </div>
+          <div class="section-table flex-1" id="rxTableC">
+            <div class="card-body">
+            <table class="data-table"><thead><tr>
+              <th style="width:24px;"></th><th style="width:60px;">코드</th><th style="min-width:200px;">명칭</th><th style="width:40px;">용량</th><th style="width:36px;">일투</th><th style="width:36px;">일수</th><th style="width:40px;">용법</th><th style="width:50px;">특정내역</th><th style="width:32px;">청구</th><th style="width:56px;">수납방법</th>
+            </tr></thead><tbody id="rxBodyC">
+            </tbody></table>
+            </div>
+          </div>
+          <div class="search-bar"><label>처방 검색</label><input type="text" class="search-input" placeholder="처방 검색"><button class="slip-preview-btn" onclick="openSlipPreview('c')" style="margin-left:auto;">슬립지 미리보기</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="column column-3">
+      <div class="card flex-1">
+        <div class="bp-header">
+          <span class="bp-title">묶음처방</span>
+          <button class="icon-btn" title="설정">&#9881;</button>
+          <button class="icon-btn">+</button>
+        </div>
+        <div class="bp-toolbar">
+          <input type="text" class="bp-search-input" placeholder="묶음처방 검색">
+        </div>
+        <div class="bp-content">
+          <div class="bp-list">
+            <div class="bp-cat">&#128193; 수액 세트</div>
+            <div class="bp-item selected">수액 INFUSION SET(Y)</div>
+            <div class="bp-item">항생제 IV SET</div>
+            <div class="bp-item">영양 수액 SET</div>
+          </div>
+          <div class="bp-detail">
+            <div class="bp-info">
+              <span>코드: <span class="bp-info-val">INF_SET_Y</span></span>
+              <span class="bp-info-sep">|</span>
+              <span>항목수: <span class="bp-info-val">15</span></span>
+            </div>
+            <div class="bp-section">
+              <div style="margin-bottom:4px;"><span class="bp-section-title">처방 항목</span></div>
+              <div class="bp-section-item">라이넥주(태반주사)</div>
+              <div class="bp-section-item">중외엔에스100ml</div>
+              <div class="bp-section-item">5%포도당키트250ml</div>
+              <div class="bp-section-item">녹십자생리식염키트250ml</div>
+              <div class="bp-section-item">멸균증류수(주사용수)200ml</div>
+              <div class="bp-section-item">푸르설타민주(마늘주사)</div>
+              <div class="bp-section-item">지씨비타오(B5)</div>
+              <div class="bp-section-item">메가비타식스(B6)</div>
+              <div class="bp-section-item">지씨비타일이(B12)</div>
+              <div class="bp-section-item">히시파겐씨주</div>
+              <div class="bp-section-item">메가그린(비타민C)</div>
+              <div class="bp-section-item">메가네슘주5ml</div>
+              <div class="bp-section-item">IV Filter SET</div>
+              <div class="bp-section-item">중외엔에스100ml</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="column column-4">
+      <div class="card symptoms-card">
+        <div class="card-header">증상</div>
+        <div class="card-body" style="padding:8px;">
+          <textarea class="textarea-field" rows="3" placeholder="환자 증상">어지러움, 두통 간헐적</textarea>
+          <div class="tag-row" style="margin-top:8px;">
+            <span class="tag-small">두통</span><span class="tag-small">어지러움</span>
+          </div>
+        </div>
+      </div>
+      <div class="card flex-1">
+        <div class="card-header">메모</div>
+        <div class="card-body" style="padding:8px;">
+          <textarea class="textarea-field" rows="3" placeholder="메모">HbA1c 재검 필요, 다음 내원 시 안저검사 예약</textarea>
+        </div>
+      </div>
+      <div class="card" style="height:120px;">
+        <div class="card-header">진료비</div>
+        <div class="card-body" style="padding:12px;">
+          <div class="summary-row"><span class="summary-label">총액</span><span class="summary-value" style="font-weight:600;">45,200원</span></div>
+          <div class="summary-row"><span class="summary-label">본인부담</span><span class="summary-value">13,560원</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Context menu for C안 -->
+<div class="ctx-menu" id="ctxMenu"></div>
+
 </div>
 
 <script>
@@ -663,13 +834,19 @@ var rxData = [
 // State per variant
 var stateA = { rows: JSON.parse(JSON.stringify(rxData)), selected: new Set() };
 var stateB = { rows: JSON.parse(JSON.stringify(rxData)), selected: new Set() };
+var stateC = { rows: JSON.parse(JSON.stringify(rxData)), selected: new Set(), nextMix: 1 };
 
 var currentVariant = 'a';
 
-function getState() { return currentVariant === 'a' ? stateA : stateB; }
+function getState() {
+  if (currentVariant === 'a') return stateA;
+  if (currentVariant === 'b') return stateB;
+  return stateC;
+}
 
 // ===== Render =====
 function renderTable(variant) {
+  if (variant === 'c') { renderTableC(); return; }
   var st = variant === 'a' ? stateA : stateB;
   var tbody = document.getElementById('rxBody' + variant.toUpperCase());
   tbody.innerHTML = '';
@@ -697,6 +874,200 @@ function renderTable(variant) {
       '<td>' + row.pay + '</td>';
     tbody.appendChild(tr);
   });
+}
+
+// ===== C안 Render =====
+function renderTableC() {
+  var st = stateC;
+  var tbody = document.getElementById('rxBodyC');
+  tbody.innerHTML = '';
+
+  // Sort by MIX group (reuse sortByMixGroupC which groups by mix value)
+  var sortedIndices = sortByMixGroupC(st.rows);
+
+  sortedIndices.forEach(function(i) {
+    var row = st.rows[i];
+    var tr = document.createElement('tr');
+    var hasMix = row.mix !== '-';
+    tr.className = 'rx-row' + (st.selected.has(i) ? ' multi-selected' : '');
+    tr.dataset.index = i;
+
+    // Build name cell with MIX badge
+    var badgeHtml = '';
+    if (hasMix) {
+      badgeHtml = '<span class="mix-badge mix-' + row.mix + '">MIX' + row.mix + '</span>';
+    }
+
+    tr.innerHTML =
+      '<td class="rx-icon-cell"><svg width="12" height="12" style="color:' + (hasMix ? '#3B82F6' : '#9CA3AF') + ';vertical-align:middle;"><use href="#syringe-icon"/></svg></td>' +
+      '<td>' + row.code + '</td>' +
+      '<td class="rx-name-cell" onclick="handleNameClick(event, \'c\', ' + i + ')">' + badgeHtml + row.name + '</td>' +
+      '<td>' + row.dose + '</td>' +
+      '<td>' + row.perDay + '</td>' +
+      '<td>' + row.days + '</td>' +
+      '<td>' + row.usage + '</td>' +
+      '<td></td>' +
+      '<td>' + row.claim + '</td>' +
+      '<td>' + row.pay + '</td>';
+
+    // Right-click context menu
+    tr.addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      // If right-clicked row is not in selection, select only this row
+      if (!st.selected.has(i)) {
+        st.selected.clear();
+        st.selected.add(i);
+        renderTableC();
+      }
+      showCtxMenu(e.clientX, e.clientY);
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+
+// Sort for C안: group by mix number, then ungrouped
+function sortByMixGroupC(rows) {
+  var groups = {};
+  var ungrouped = [];
+  rows.forEach(function(row, i) {
+    if (row.mix === '-') {
+      ungrouped.push(i);
+    } else {
+      if (!groups[row.mix]) groups[row.mix] = [];
+      groups[row.mix].push(i);
+    }
+  });
+  var result = [];
+  var nums = Object.keys(groups).sort(function(a, b) { return Number(a) - Number(b); });
+  nums.forEach(function(n) { groups[n].forEach(function(i) { result.push(i); }); });
+  ungrouped.forEach(function(i) { result.push(i); });
+  return result;
+}
+
+// ===== C안 Context Menu =====
+function showCtxMenu(x, y) {
+  var menu = document.getElementById('ctxMenu');
+  var st = stateC;
+
+  // Find existing MIX groups
+  var existingGroups = {};
+  st.rows.forEach(function(row) {
+    if (row.mix !== '-') existingGroups[row.mix] = true;
+  });
+  var groupNums = Object.keys(existingGroups).sort(function(a, b) { return Number(a) - Number(b); });
+
+  // Determine next new MIX number
+  var nextNew = 1;
+  while (existingGroups[String(nextNew)]) nextNew++;
+  if (nextNew > 4) nextNew = null; // Max 4 MIX groups
+
+  var html = '';
+
+  // "MIX 지정" - creates new group with next available number
+  if (nextNew) {
+    html += '<div class="ctx-menu-item" onclick="assignNewMix()">MIX 지정 <span style="font-size:10px;color:#9CA3AF;margin-left:auto;">→ MIX' + nextNew + '</span></div>';
+  }
+
+  // Existing groups submenu
+  if (groupNums.length > 0) {
+    html += '<div class="ctx-menu-sub">';
+    html += '<div class="ctx-menu-item">기존 MIX에 편입 <span style="margin-left:auto;font-size:10px;">▶</span></div>';
+    html += '<div class="ctx-submenu">';
+    groupNums.forEach(function(n) {
+      var badgeColor = ['','#3B82F6','#F59E0B','#10B981','#8B5CF6'][Number(n)] || '#6B7280';
+      html += '<div class="ctx-menu-item" onclick="assignToMix(\'' + n + '\')">';
+      html += '<span class="mix-badge-sm" style="background:' + badgeColor + ';"></span>';
+      html += 'MIX' + n + '</div>';
+    });
+    html += '</div></div>';
+  }
+
+  // Check if any selected rows have MIX assigned
+  var anyHasMix = false;
+  st.selected.forEach(function(i) {
+    if (st.rows[i].mix !== '-') anyHasMix = true;
+  });
+  if (anyHasMix) {
+    html += '<div class="ctx-menu-item danger" onclick="releaseMix()">MIX 해제</div>';
+  }
+
+  // 약품정보조회
+  html += '<div class="ctx-menu-item" style="border-top:1px solid #E5E7EB;margin-top:2px;padding-top:8px;" onclick="closeCtxMenu()">약품정보조회</div>';
+
+  menu.innerHTML = html;
+
+  // Position menu
+  menu.style.left = x + 'px';
+  menu.style.top = y + 'px';
+  menu.classList.add('open');
+
+  // Adjust if off-screen
+  setTimeout(function() {
+    var rect = menu.getBoundingClientRect();
+    if (rect.right > window.innerWidth) menu.style.left = (x - rect.width) + 'px';
+    if (rect.bottom > window.innerHeight) menu.style.top = (y - rect.height) + 'px';
+  }, 0);
+}
+
+function closeCtxMenu() {
+  document.getElementById('ctxMenu').classList.remove('open');
+}
+
+function assignNewMix() {
+  var st = stateC;
+  // Find next available MIX number
+  var existing = {};
+  st.rows.forEach(function(row) {
+    if (row.mix !== '-') existing[row.mix] = true;
+  });
+  var nextNum = 1;
+  while (existing[String(nextNum)]) nextNum++;
+  if (nextNum > 4) { closeCtxMenu(); return; }
+
+  st.selected.forEach(function(i) {
+    st.rows[i].mix = String(nextNum);
+    st.rows[i].mActive = true;
+  });
+
+  closeCtxMenu();
+  renderTableC();
+  showSelectionHintC(st.selected.size, nextNum);
+}
+
+function assignToMix(mixNum) {
+  var st = stateC;
+  st.selected.forEach(function(i) {
+    st.rows[i].mix = mixNum;
+    st.rows[i].mActive = true;
+  });
+  closeCtxMenu();
+  renderTableC();
+  showSelectionHintC(st.selected.size, mixNum);
+}
+
+function releaseMix() {
+  var st = stateC;
+  st.selected.forEach(function(i) {
+    st.rows[i].mix = '-';
+    st.rows[i].mActive = false;
+  });
+  closeCtxMenu();
+  renderTableC();
+
+  var hint = document.getElementById('selectionHint');
+  hint.textContent = 'MIX 해제 완료';
+  hint.classList.add('visible');
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(function() { hint.classList.remove('visible'); }, 2000);
+}
+
+function showSelectionHintC(count, mixNum) {
+  var hint = document.getElementById('selectionHint');
+  hint.textContent = count + '개 오더가 MIX' + mixNum + '에 지정되었습니다';
+  hint.classList.add('visible');
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(function() { hint.classList.remove('visible'); }, 2000);
 }
 
 // Sort rows: group by MIX number, M-active rows as headers first, then same-number non-M rows, then ungrouped
@@ -759,7 +1130,7 @@ function buildMixCell(variant, index, mActive, mixVal) {
 
 // ===== Interaction =====
 function handleNameClick(e, variant, index) {
-  var st = variant === 'a' ? stateA : stateB;
+  var st = getStateFor(variant);
 
   if (e.metaKey || e.ctrlKey) {
     // Toggle selection
@@ -774,12 +1145,24 @@ function handleNameClick(e, variant, index) {
     st.selected.add(index);
   }
   renderTable(variant);
-  showSelectionHint(st.selected.size);
+  if (variant === 'c' && st.selected.size > 1) {
+    var hint = document.getElementById('selectionHint');
+    hint.textContent = st.selected.size + '개 오더 선택됨 (우클릭으로 MIX 지정)';
+    hint.classList.add('visible');
+  } else {
+    showSelectionHint(st.selected.size);
+  }
+}
+
+function getStateFor(v) {
+  if (v === 'a') return stateA;
+  if (v === 'b') return stateB;
+  return stateC;
 }
 
 function toggleM(e, variant, index) {
   e.stopPropagation();
-  var st = variant === 'a' ? stateA : stateB;
+  var st = getStateFor(variant);
 
   if (index === -1) {
     // Bundle M toggle
@@ -802,7 +1185,7 @@ function toggleMixMenu(e, btn) {
 
 function selectMixOpt(e, variant, index, newVal) {
   e.stopPropagation();
-  var st = variant === 'a' ? stateA : stateB;
+  var st = getStateFor(variant);
 
   if (index === -1) {
     st.bundle.mix = newVal;
@@ -866,11 +1249,15 @@ function switchVariant(v) {
 
 // Clear selection and close menus when clicking outside
 document.addEventListener('click', function(e) {
+  // Close context menu
+  if (!e.target.closest('.ctx-menu')) {
+    closeCtxMenu();
+  }
   // Close any open mix dropdown menus
   if (!e.target.closest('.mix-dropdown-wrap')) {
     document.querySelectorAll('.mix-dropdown-menu.open').forEach(function(m) { m.classList.remove('open'); });
   }
-  if (!e.target.closest('.rx-name-cell') && !e.target.closest('.mix-dropdown-wrap') && !e.target.closest('.m-btn')) {
+  if (!e.target.closest('.rx-name-cell') && !e.target.closest('.mix-dropdown-wrap') && !e.target.closest('.m-btn') && !e.target.closest('.ctx-menu')) {
     var st = getState();
     if (st.selected.size > 0) {
       st.selected.clear();
@@ -882,60 +1269,65 @@ document.addEventListener('click', function(e) {
 
 // ===== Slip Preview =====
 function openSlipPreview(variant) {
-  var st = variant === 'a' ? stateA : stateB;
+  var st = getStateFor(variant);
   var now = new Date();
   var dateStr = now.getFullYear() + '-' + pad2(now.getMonth()+1) + '-' + pad2(now.getDate());
   var timeStr = pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds());
 
   var html = '<div class="slip-receipt">';
 
-  // 처방 내역 (종류별 구분)
-  html += '<div class="slip-section-title">처방 내역</div>';
-  html += '<table class="slip-rx-table"><thead><tr>';
-  html += '<th class="slip-rx-name">명칭</th>';
-  html += '<th class="slip-rx-right">용량</th>';
-  html += '<th class="slip-rx-right">일투</th>';
-  html += '<th class="slip-rx-right">일수</th>';
-  html += '<th class="slip-rx-right">용법</th>';
-  html += '</tr></thead><tbody>';
+  // 상단: 진료기록 + 날짜시간
+  html += '<div class="slip-header-title">진료기록</div>';
+  html += '<div style="display:flex; justify-content:space-between;">';
+  html += '<span class="slip-header-info">' + dateStr + '</span>';
+  html += '<span class="slip-header-info">' + timeStr + '</span>';
+  html += '</div>';
+  html += '<hr class="slip-divider">';
 
-  // Group rows by MIX for slip display (종류별 구분)
+  // 환자정보
+  html += '<div style="margin-bottom:2px;">';
+  html += '<span style="font-weight:600;">17</span>&nbsp;&nbsp;여&nbsp;&nbsp;';
+  html += '<span style="font-size:13px; font-weight:700;">조연숙</span>';
+  html += '</div>';
+  html += '<div class="slip-header-info">나이:54세&nbsp;&nbsp;&nbsp;주민:701116-</div>';
+  html += '<hr class="slip-divider">';
+
+  // 처방 헤더
+  html += '<div style="font-weight:700; margin-bottom:2px;">처방 ─────────────────────</div>';
+  html += '<div class="slip-header-info" style="display:flex; gap:12px;">';
+  html += '<span>명칭</span>';
+  html += '<span style="margin-left:auto;">용량 일투 일수 용법</span>';
+  html += '</div>';
+  html += '<div class="slip-header-info">원내</div>';
+
+  // 처방 목록 (사진처럼 한줄씩, MIX는 용법 옆에 표기)
   var sorted = sortByMixGroup(st.rows);
-  var currentMix = null;
 
   sorted.forEach(function(i) {
     var row = st.rows[i];
-    // Show MIX group label (종류별 구분)
-    if (row.mix !== '-' && row.mix !== currentMix) {
-      currentMix = row.mix;
-      html += '<tr><td colspan="5" class="slip-mix-label" style="padding-top:6px;">MIX ' + row.mix + '</td></tr>';
-    } else if (row.mix === '-' && currentMix !== '-') {
-      currentMix = '-';
-      html += '<tr><td colspan="5" class="slip-mix-label" style="padding-top:6px;">개별</td></tr>';
+    var mixStr = '';
+    if (row.mix !== '-') {
+      mixStr = row.mix + '번';
+      if (!row.mActive) mixStr += 'mai';
     }
+    var rightPart = row.dose + '  ' + row.perDay + '  ' + row.days;
+    var usageMix = '';
+    if (row.usage) usageMix += row.usage;
+    if (mixStr) usageMix += (usageMix ? ' ' : '') + mixStr;
 
-    var usageStr = row.usage || '';
-
-    html += '<tr>';
-    html += '<td class="slip-rx-name">' + row.name + '</td>';
-    html += '<td class="slip-rx-right">' + row.dose + '</td>';
-    html += '<td class="slip-rx-right">' + row.perDay + '</td>';
-    html += '<td class="slip-rx-right">' + row.days + '</td>';
-    html += '<td class="slip-rx-right">' + usageStr + '</td>';
-    html += '</tr>';
+    html += '<div style="display:flex; justify-content:space-between; font-size:10px; padding:1px 0;">';
+    html += '<span style="flex:1; min-width:0; word-break:break-all;">' + row.name + '</span>';
+    html += '<span style="white-space:nowrap; padding-left:8px; text-align:right;">' + rightPart + '</span>';
+    html += '</div>';
+    if (usageMix) {
+      html += '<div style="font-size:10px; text-align:right; color:#555; margin-top:-2px;">' + usageMix + '</div>';
+    }
   });
 
-  html += '</tbody></table>';
   html += '<hr class="slip-divider">';
 
-  // Footer
-  html += '<div class="slip-footer">';
-  html += '<div class="slip-footer-row"><span>진료의:</span><span>doctor 카야</span></div>';
-  html += '<div class="slip-footer-row"><span>진료시간:</span><span>' + dateStr + ' ' + timeStr + '</span></div>';
-  html += '<div class="slip-footer-row"><span>출력시간:</span><span>' + dateStr + ' ' + timeStr + '</span></div>';
-  html += '<div class="slip-footer-row" style="margin-top:4px;"><span>수납액:</span><span style="font-weight:700;">13,560원</span></div>';
-  html += '<div class="slip-footer-row"><span>종류:</span><span>' + (variant === 'a' ? 'A안' : 'B안') + ' MIX 처방</span></div>';
-  html += '</div>';
+  // 하단: 진료의
+  html += '<div style="font-size:11px; font-weight:600;">진료의: doctor 카야</div>';
 
   html += '</div>';
 
@@ -952,6 +1344,7 @@ function pad2(n) { return n < 10 ? '0' + n : '' + n; }
 // Init
 renderTable('a');
 renderTable('b');
+renderTable('c');
 </script>
 
 </body>
