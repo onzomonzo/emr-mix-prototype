@@ -983,7 +983,15 @@ function sortByMixGroupC(rows) {
   });
   var result = [];
   var nums = Object.keys(groups).sort(function(a, b) { return Number(a) - Number(b); });
-  nums.forEach(function(n) { groups[n].forEach(function(i) { result.push(i); }); });
+  nums.forEach(function(n) {
+    // Main rows first within each group
+    groups[n].sort(function(a, b) {
+      if (rows[a].mActive && !rows[b].mActive) return -1;
+      if (!rows[a].mActive && rows[b].mActive) return 1;
+      return 0;
+    });
+    groups[n].forEach(function(i) { result.push(i); });
+  });
   ungrouped.forEach(function(i) { result.push(i); });
   return result;
 }
