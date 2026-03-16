@@ -1024,7 +1024,7 @@ function showCtxMenu(x, y) {
 
     // New MIX group
     if (nextNew) {
-      html += '<div class="ctx-menu-item" onclick="assignNewMix()">MIX 지정 <span style="font-size:10px;color:#9CA3AF;margin-left:auto;">→ MIX' + nextNew + '</span></div>';
+      html += '<div class="ctx-menu-item" onclick="assignNewMix()">MIX 지정</div>';
     }
 
     // Existing groups for 편입
@@ -1033,7 +1033,7 @@ function showCtxMenu(x, y) {
       var badgeColor = ['','#3B82F6','#F59E0B','#10B981','#8B5CF6'][Number(n)] || '#6B7280';
       html += '<div class="ctx-menu-item" onclick="assignToMix(\'' + n + '\')">';
       html += '<span class="mix-badge-sm" style="background:' + badgeColor + ';"></span>';
-      html += 'MIX' + n + '에 편입</div>';
+      html += 'MIX' + n + '</div>';
     });
 
     // 해제
