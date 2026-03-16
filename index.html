@@ -1080,7 +1080,7 @@ function assignNewMix() {
 
   st.selected.forEach(function(i) {
     st.rows[i].mix = String(nextNum);
-    st.rows[i].mActive = true;
+    st.rows[i].mActive = false;
   });
 
   closeCtxMenu();
@@ -1092,7 +1092,7 @@ function assignToMix(mixNum) {
   var st = getState();
   st.selected.forEach(function(i) {
     st.rows[i].mix = mixNum;
-    st.rows[i].mActive = true;
+    st.rows[i].mActive = false;
   });
   closeCtxMenu();
   renderTable(currentVariant);
