@@ -436,10 +436,10 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
 
 <!-- A/B Test Bar -->
 <div class="abtest-bar">
-  <div class="abtest-tab active-a" onclick="switchVariant('a')" id="abtab-a"><span class="tab-badge badge-a">A</span>A안: M 왼쪽 + 드롭다운 오른쪽</div>
-  <div class="abtest-tab" onclick="switchVariant('b')" id="abtab-b"><span class="tab-badge badge-b">B</span>B안: 드롭다운 왼쪽 + M 오른쪽</div>
-  <div class="abtest-tab" onclick="switchVariant('c')" id="abtab-c"><span class="tab-badge badge-c">C</span>C안: 우클릭 MIX 지정 + 뱃지</div>
-  <span class="abtest-desc">A/B: Cmd+클릭 다중선택 &rarr; 드롭다운 일괄변경 | C: 다중선택 &rarr; 우클릭 MIX 지정</span>
+  <div class="abtest-tab active-a" onclick="switchVariant('a')" id="abtab-a"><span class="tab-badge badge-a">A</span>A안: MIX 칼럼 + 숫자 표시</div>
+  <div class="abtest-tab" onclick="switchVariant('b')" id="abtab-b"><span class="tab-badge badge-b">B</span>B안: 명칭 우측 뱃지</div>
+  <div class="abtest-tab" onclick="switchVariant('c')" id="abtab-c"><span class="tab-badge badge-c">C</span>C안: 명칭 좌측 뱃지</div>
+  <span class="abtest-desc">공통: 다중선택 &rarr; 우클릭 &rarr; 주사MIX 메뉴로 MIX 지정/편입/해제</span>
 </div>
 
 <!-- Syringe SVG icon template -->
@@ -1002,7 +1002,7 @@ function showCtxMenu(x, y) {
   // Determine next new MIX number
   var nextNew = 1;
   while (existingGroups[String(nextNew)]) nextNew++;
-  if (nextNew > 4) nextNew = null; // Max 4 MIX groups
+  if (nextNew > 4) nextNew = null;
 
   // Check if any selected rows have MIX assigned
   var anyHasMix = false;
@@ -1012,13 +1012,21 @@ function showCtxMenu(x, y) {
 
   var html = '';
 
-  // "MIX 지정" - 클릭하면 바로 다음 번호로 새 그룹 생성 (항상 직접 클릭)
-  if (nextNew) {
-    html += '<div class="ctx-menu-item" onclick="assignNewMix()" style="font-weight:500;">MIX 지정 <span style="font-size:10px;color:#9CA3AF;margin-left:auto;">→ MIX' + nextNew + '</span></div>';
-  }
+  if (groupNums.length === 0) {
+    // No MIX groups exist → "주사MIX" is a direct action creating MIX1
+    html += '<div class="ctx-menu-item" onclick="assignNewMix()" style="font-weight:500;">주사MIX</div>';
+  } else {
+    // MIX groups exist → "주사MIX" has right-expanding submenu
+    html += '<div class="ctx-menu-sub">';
+    html += '<div class="ctx-menu-item" style="font-weight:500;">주사MIX <span style="margin-left:auto;font-size:10px;color:#9CA3AF;">▸</span></div>';
+    html += '<div class="ctx-submenu">';
 
-  // 기존 MIX 그룹 (편입용)
-  if (groupNums.length > 0) {
+    // New MIX group
+    if (nextNew) {
+      html += '<div class="ctx-menu-item" onclick="assignNewMix()">MIX 지정 <span style="font-size:10px;color:#9CA3AF;margin-left:auto;">→ MIX' + nextNew + '</span></div>';
+    }
+
+    // Existing groups for 편입
     html += '<div style="border-top:1px solid #E5E7EB;margin:2px 0;"></div>';
     groupNums.forEach(function(n) {
       var badgeColor = ['','#3B82F6','#F59E0B','#10B981','#8B5CF6'][Number(n)] || '#6B7280';
@@ -1026,16 +1034,19 @@ function showCtxMenu(x, y) {
       html += '<span class="mix-badge-sm" style="background:' + badgeColor + ';"></span>';
       html += 'MIX' + n + '에 편입</div>';
     });
-  }
 
-  // 해제
-  if (anyHasMix) {
-    html += '<div style="border-top:1px solid #E5E7EB;margin:2px 0;"></div>';
-    html += '<div class="ctx-menu-item danger" onclick="releaseMix()">MIX 해제</div>';
+    // 해제
+    if (anyHasMix) {
+      html += '<div style="border-top:1px solid #E5E7EB;margin:2px 0;"></div>';
+      html += '<div class="ctx-menu-item danger" onclick="releaseMix()">MIX 해제</div>';
+    }
+
+    html += '</div>'; // close ctx-submenu
+    html += '</div>'; // close ctx-menu-sub
   }
 
   // 약품정보조회
-  html += '<div class="ctx-menu-item" style="border-top:1px solid #E5E7EB;margin-top:2px;padding-top:8px;" onclick="closeCtxMenu()">약품정보조회</div>';
+  html += '<div class="ctx-menu-item" onclick="closeCtxMenu()">약품정보조회</div>';
 
   menu.innerHTML = html;
 
