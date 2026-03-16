@@ -232,6 +232,53 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
 }
 .status-bar button.active { background: #7C3AED; color: #fff; border-color: #7C3AED; }
 
+/* A안 MIX number in column */
+.mix-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 18px; border-radius: 4px;
+  font-size: 11px; font-weight: 700; color: #fff; cursor: pointer;
+  line-height: 1;
+}
+.mix-num.mix-1 { background: #3B82F6; }
+.mix-num.mix-2 { background: #F59E0B; }
+.mix-num.mix-3 { background: #10B981; }
+.mix-num.mix-4 { background: #8B5CF6; }
+
+/* A안 inline MIX dropdown (appears when clicking a number) */
+.mix-inline-dropdown {
+  position: fixed; display: none; background: #fff;
+  border: 1px solid #E5E7EB; border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 100px;
+  z-index: 10000; padding: 4px 0;
+}
+.mix-inline-dropdown.open { display: block; }
+.mix-inline-dropdown .mid-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 12px; font-size: 11px; color: #374151;
+  cursor: pointer; white-space: nowrap;
+}
+.mix-inline-dropdown .mid-item:hover { background: #F3F4F6; }
+.mix-inline-dropdown .mid-item.main-item { font-weight: 600; color: #111827; }
+.mix-inline-dropdown .mid-item.danger { color: #EF4444; }
+.mix-inline-dropdown .mid-sep { border-top: 1px solid #E5E7EB; margin: 2px 0; }
+
+/* B안 badge on right side of name */
+.mix-badge-right {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 16px; border-radius: 4px; padding: 0 4px;
+  font-size: 10px; font-weight: 700; color: #fff; margin-left: auto;
+  flex-shrink: 0;
+}
+.mix-badge-right.mix-1 { background: #3B82F6; }
+.mix-badge-right.mix-2 { background: #F59E0B; }
+.mix-badge-right.mix-3 { background: #10B981; }
+.mix-badge-right.mix-4 { background: #8B5CF6; }
+
+/* B안 name cell needs flex for right-aligned badge */
+.rx-name-cell-flex {
+  display: flex !important; align-items: center; gap: 4px;
+}
+
 /* Multi-select hint */
 .selection-hint {
   position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
@@ -598,7 +645,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
           <div class="section-table flex-1" id="rxTableB">
             <div class="card-body">
             <table class="data-table"><thead><tr>
-              <th style="width:24px;"></th><th style="width:60px;">코드</th><th style="min-width:150px;">명칭</th><th style="width:40px;">용량</th><th style="width:36px;">일투</th><th style="width:36px;">일수</th><th style="width:40px;">용법</th><th style="width:56px;" class="mix-header">MIX</th><th style="width:50px;">특정내역</th><th style="width:32px;">청구</th><th style="width:56px;">수납방법</th>
+              <th style="width:24px;"></th><th style="width:60px;">코드</th><th style="min-width:200px;">명칭</th><th style="width:40px;">용량</th><th style="width:36px;">일투</th><th style="width:36px;">일수</th><th style="width:40px;">용법</th><th style="width:50px;">특정내역</th><th style="width:32px;">청구</th><th style="width:56px;">수납방법</th>
             </tr></thead><tbody id="rxBodyB">
             </tbody></table>
             </div>
@@ -806,8 +853,10 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
   </div>
 </div>
 
-<!-- Context menu for C안 -->
+<!-- Context menu (shared by all variants) -->
 <div class="ctx-menu" id="ctxMenu"></div>
+<!-- A안 inline MIX dropdown -->
+<div class="mix-inline-dropdown" id="mixInlineDropdown"></div>
 
 </div>
 
@@ -832,8 +881,8 @@ var rxData = [
 ];
 
 // State per variant
-var stateA = { rows: JSON.parse(JSON.stringify(rxData)), selected: new Set(), lastClicked: -1 };
-var stateB = { rows: JSON.parse(JSON.stringify(rxData)), selected: new Set(), lastClicked: -1 };
+var stateA = { rows: JSON.parse(JSON.stringify(rxData)), selected: new Set(), lastClicked: -1, nextMix: 1 };
+var stateB = { rows: JSON.parse(JSON.stringify(rxData)), selected: new Set(), lastClicked: -1, nextMix: 1 };
 var stateC = { rows: JSON.parse(JSON.stringify(rxData)), selected: new Set(), lastClicked: -1, nextMix: 1 };
 
 var currentVariant = 'a';
@@ -846,43 +895,10 @@ function getState() {
 
 // ===== Render =====
 function renderTable(variant) {
-  if (variant === 'c') { renderTableC(); return; }
-  var st = variant === 'a' ? stateA : stateB;
+  var st = getStateFor(variant);
   var tbody = document.getElementById('rxBody' + variant.toUpperCase());
   tbody.innerHTML = '';
 
-  // Sort rows by MIX grouping: M-active rows are group headers, same-number rows follow
-  var sortedIndices = sortByMixGroup(st.rows);
-
-  sortedIndices.forEach(function(i) {
-    var row = st.rows[i];
-    var tr = document.createElement('tr');
-    var isGroupHeader = row.mActive && row.mix !== '-';
-    tr.className = 'rx-row' + (st.selected.has(i) ? ' multi-selected' : '') + (isGroupHeader ? ' mix-group-header' : '');
-    tr.dataset.index = i;
-    tr.innerHTML =
-      '<td class="rx-icon-cell"><svg width="12" height="12" style="color:' + (isGroupHeader ? '#3B82F6' : '#9CA3AF') + ';vertical-align:middle;"><use href="#syringe-icon"/></svg></td>' +
-      '<td>' + row.code + '</td>' +
-      '<td class="rx-name-cell" onclick="handleNameClick(event, \'' + variant + '\', ' + i + ')">' + row.name + '</td>' +
-      '<td>' + row.dose + '</td>' +
-      '<td>' + row.perDay + '</td>' +
-      '<td>' + row.days + '</td>' +
-      '<td>' + row.usage + '</td>' +
-      '<td class="mix-cell">' + buildMixCell(variant, i, row.mActive, row.mix) + '</td>' +
-      '<td></td>' +
-      '<td>' + row.claim + '</td>' +
-      '<td>' + row.pay + '</td>';
-    tbody.appendChild(tr);
-  });
-}
-
-// ===== C안 Render =====
-function renderTableC() {
-  var st = stateC;
-  var tbody = document.getElementById('rxBodyC');
-  tbody.innerHTML = '';
-
-  // Sort by MIX group (reuse sortByMixGroupC which groups by mix value)
   var sortedIndices = sortByMixGroupC(st.rows);
 
   sortedIndices.forEach(function(i) {
@@ -892,35 +908,61 @@ function renderTableC() {
     tr.className = 'rx-row' + (st.selected.has(i) ? ' multi-selected' : '');
     tr.dataset.index = i;
 
-    // Build name cell with MIX badge
-    var badgeHtml = '';
-    if (hasMix) {
-      badgeHtml = '<span class="mix-badge mix-' + row.mix + '">MIX' + row.mix + '</span>';
+    var iconColor = hasMix ? '#3B82F6' : '#9CA3AF';
+    var iconTd = '<td class="rx-icon-cell"><svg width="12" height="12" style="color:' + iconColor + ';vertical-align:middle;"><use href="#syringe-icon"/></svg></td>';
+    var codeTd = '<td>' + row.code + '</td>';
+
+    var nameCellContent = '';
+    var nameCellClass = 'rx-name-cell';
+
+    if (variant === 'a') {
+      // A안: plain name, MIX column shows number
+      nameCellContent = row.name;
+      var mixCellHtml = '';
+      if (hasMix) {
+        mixCellHtml = '<span class="mix-num mix-' + row.mix + '" onclick="showMixInlineDropdown(event, \'a\', ' + i + ')">' + row.mix + '</span>';
+      }
+      tr.innerHTML = iconTd + codeTd +
+        '<td class="' + nameCellClass + '" onclick="handleNameClick(event, \'a\', ' + i + ')">' + nameCellContent + '</td>' +
+        '<td>' + row.dose + '</td><td>' + row.perDay + '</td><td>' + row.days + '</td><td>' + row.usage + '</td>' +
+        '<td class="mix-cell">' + mixCellHtml + '</td>' +
+        '<td></td><td>' + row.claim + '</td><td>' + row.pay + '</td>';
+    } else if (variant === 'b') {
+      // B안: badge on RIGHT side of name cell, no MIX column
+      nameCellClass += ' rx-name-cell-flex';
+      var badgeRight = '';
+      if (hasMix) {
+        badgeRight = '<span class="mix-badge-right mix-' + row.mix + '">' + row.mix + '</span>';
+      }
+      tr.innerHTML = iconTd + codeTd +
+        '<td class="' + nameCellClass + '" onclick="handleNameClick(event, \'b\', ' + i + ')"><span>' + row.name + '</span>' + badgeRight + '</td>' +
+        '<td>' + row.dose + '</td><td>' + row.perDay + '</td><td>' + row.days + '</td><td>' + row.usage + '</td>' +
+        '<td></td><td>' + row.claim + '</td><td>' + row.pay + '</td>';
+    } else {
+      // C안: badge on LEFT of name
+      var badgeLeft = '';
+      if (hasMix) {
+        badgeLeft = '<span class="mix-badge mix-' + row.mix + '">MIX' + row.mix + '</span>';
+      }
+      tr.innerHTML = iconTd + codeTd +
+        '<td class="' + nameCellClass + '" onclick="handleNameClick(event, \'c\', ' + i + ')">' + badgeLeft + row.name + '</td>' +
+        '<td>' + row.dose + '</td><td>' + row.perDay + '</td><td>' + row.days + '</td><td>' + row.usage + '</td>' +
+        '<td></td><td>' + row.claim + '</td><td>' + row.pay + '</td>';
     }
 
-    tr.innerHTML =
-      '<td class="rx-icon-cell"><svg width="12" height="12" style="color:' + (hasMix ? '#3B82F6' : '#9CA3AF') + ';vertical-align:middle;"><use href="#syringe-icon"/></svg></td>' +
-      '<td>' + row.code + '</td>' +
-      '<td class="rx-name-cell" onclick="handleNameClick(event, \'c\', ' + i + ')">' + badgeHtml + row.name + '</td>' +
-      '<td>' + row.dose + '</td>' +
-      '<td>' + row.perDay + '</td>' +
-      '<td>' + row.days + '</td>' +
-      '<td>' + row.usage + '</td>' +
-      '<td></td>' +
-      '<td>' + row.claim + '</td>' +
-      '<td>' + row.pay + '</td>';
-
-    // Right-click context menu
-    tr.addEventListener('contextmenu', function(e) {
-      e.preventDefault();
-      // If right-clicked row is not in selection, select only this row
-      if (!st.selected.has(i)) {
-        st.selected.clear();
-        st.selected.add(i);
-        renderTableC();
-      }
-      showCtxMenu(e.clientX, e.clientY);
-    });
+    // Right-click context menu for ALL variants
+    (function(idx, v, state) {
+      tr.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        currentVariant = v;
+        if (!state.selected.has(idx)) {
+          state.selected.clear();
+          state.selected.add(idx);
+          renderTable(v);
+        }
+        showCtxMenu(e.clientX, e.clientY);
+      });
+    })(i, variant, st);
 
     tbody.appendChild(tr);
   });
@@ -945,10 +987,10 @@ function sortByMixGroupC(rows) {
   return result;
 }
 
-// ===== C안 Context Menu =====
+// ===== Context Menu (all variants) =====
 function showCtxMenu(x, y) {
   var menu = document.getElementById('ctxMenu');
-  var st = stateC;
+  var st = getState();
 
   // Find existing MIX groups
   var existingGroups = {};
@@ -1015,8 +1057,7 @@ function closeCtxMenu() {
 }
 
 function assignNewMix() {
-  var st = stateC;
-  // Find next available MIX number
+  var st = getState();
   var existing = {};
   st.rows.forEach(function(row) {
     if (row.mix !== '-') existing[row.mix] = true;
@@ -1031,29 +1072,30 @@ function assignNewMix() {
   });
 
   closeCtxMenu();
-  renderTableC();
-  showSelectionHintC(st.selected.size, nextNum);
+  renderTable(currentVariant);
+  showMixHint(st.selected.size, nextNum);
 }
 
 function assignToMix(mixNum) {
-  var st = stateC;
+  var st = getState();
   st.selected.forEach(function(i) {
     st.rows[i].mix = mixNum;
     st.rows[i].mActive = true;
   });
   closeCtxMenu();
-  renderTableC();
-  showSelectionHintC(st.selected.size, mixNum);
+  renderTable(currentVariant);
+  showMixHint(st.selected.size, mixNum);
 }
 
 function releaseMix() {
-  var st = stateC;
+  var st = getState();
   st.selected.forEach(function(i) {
     st.rows[i].mix = '-';
     st.rows[i].mActive = false;
   });
   closeCtxMenu();
-  renderTableC();
+  closeMixInlineDropdown();
+  renderTable(currentVariant);
 
   var hint = document.getElementById('selectionHint');
   hint.textContent = 'MIX 해제 완료';
@@ -1062,7 +1104,7 @@ function releaseMix() {
   hintTimer = setTimeout(function() { hint.classList.remove('visible'); }, 2000);
 }
 
-function showSelectionHintC(count, mixNum) {
+function showMixHint(count, mixNum) {
   var hint = document.getElementById('selectionHint');
   hint.textContent = count + '개 오더가 MIX' + mixNum + '에 지정되었습니다';
   hint.classList.add('visible');
@@ -1070,63 +1112,73 @@ function showSelectionHintC(count, mixNum) {
   hintTimer = setTimeout(function() { hint.classList.remove('visible'); }, 2000);
 }
 
-// Sort rows: group by MIX number, M-active rows as headers first, then same-number non-M rows, then ungrouped
-function sortByMixGroup(rows) {
-  // Collect MIX groups: find all unique non-'-' mix values
-  var groups = {}; // mix value -> { headers: [indices], members: [indices] }
-  var ungrouped = []; // rows with mix '-'
+// ===== A안 Inline MIX Dropdown =====
+function showMixInlineDropdown(e, variant, index) {
+  e.stopPropagation();
+  var st = getStateFor(variant);
+  var row = st.rows[index];
+  var currentMix = row.mix;
+  var dd = document.getElementById('mixInlineDropdown');
 
-  rows.forEach(function(row, i) {
-    if (row.mix === '-') {
-      ungrouped.push(i);
-    } else {
-      if (!groups[row.mix]) groups[row.mix] = { headers: [], members: [] };
-      if (row.mActive) {
-        groups[row.mix].headers.push(i);
-      } else {
-        groups[row.mix].members.push(i);
+  // Find all existing groups
+  var existingGroups = {};
+  st.rows.forEach(function(r) {
+    if (r.mix !== '-') existingGroups[r.mix] = true;
+  });
+  var groupNums = Object.keys(existingGroups).sort(function(a, b) { return Number(a) - Number(b); });
+
+  var html = '';
+  // "Main" at top - means this row becomes the main/primary of its group (visual only)
+  html += '<div class="mid-item main-item" onclick="closeMixInlineDropdown()">Main</div>';
+
+  // Other existing groups (excluding current)
+  if (groupNums.length > 1 || (groupNums.length === 1 && groupNums[0] !== currentMix)) {
+    html += '<div class="mid-sep"></div>';
+    groupNums.forEach(function(n) {
+      if (n !== currentMix) {
+        var badgeColor = ['','#3B82F6','#F59E0B','#10B981','#8B5CF6'][Number(n)] || '#6B7280';
+        html += '<div class="mid-item" onclick="moveToMixGroup(\'' + variant + '\', ' + index + ', \'' + n + '\')">';
+        html += '<span style="width:14px;height:14px;border-radius:3px;background:' + badgeColor + ';display:inline-block;flex-shrink:0;"></span>';
+        html += 'MIX' + n + '으로 이동</div>';
       }
-    }
-  });
-
-  // Build sorted order: groups sorted by mix number, then ungrouped
-  var result = [];
-  var mixNums = Object.keys(groups).sort(function(a, b) { return Number(a) - Number(b); });
-
-  mixNums.forEach(function(num) {
-    var g = groups[num];
-    // Headers first (M-active with this number)
-    g.headers.forEach(function(i) { result.push(i); });
-    // Then members (non-M with this number)
-    g.members.forEach(function(i) { result.push(i); });
-  });
-
-  // Ungrouped rows (mix '-') at the end
-  ungrouped.forEach(function(i) { result.push(i); });
-
-  return result;
-}
-
-function buildMixCell(variant, index, mActive, mixVal) {
-  var mBtnClass = mActive ? 'active' : 'inactive';
-  var mBtn = '<button class="m-btn ' + mBtnClass + '" onclick="toggleM(event, \'' + variant + '\', ' + index + ')">M</button>';
-
-  var vals = ['-', '1', '2', '3', '4'];
-  var opts = '';
-  vals.forEach(function(v) {
-    opts += '<div class="mix-dropdown-opt' + (mixVal === v ? ' selected' : '') + '" onclick="selectMixOpt(event, \'' + variant + '\', ' + index + ', \'' + v + '\')">' + v + '</div>';
-  });
-  var dropdown = '<span class="mix-dropdown-wrap">' +
-    '<button class="mix-dropdown-btn" onclick="toggleMixMenu(event, this)">' + mixVal + '</button>' +
-    '<div class="mix-dropdown-menu">' + opts + '</div>' +
-    '</span>';
-
-  if (variant === 'a') {
-    return '<span class="mix-cell-inner">' + mBtn + dropdown + '</span>';
-  } else {
-    return '<span class="mix-cell-inner">' + dropdown + mBtn + '</span>';
+    });
   }
+
+  // 해제
+  html += '<div class="mid-sep"></div>';
+  html += '<div class="mid-item danger" onclick="releaseSingleMix(\'' + variant + '\', ' + index + ')">해제</div>';
+
+  dd.innerHTML = html;
+  dd.style.left = e.clientX + 'px';
+  dd.style.top = e.clientY + 'px';
+  dd.classList.add('open');
+
+  setTimeout(function() {
+    var rect = dd.getBoundingClientRect();
+    if (rect.right > window.innerWidth) dd.style.left = (e.clientX - rect.width) + 'px';
+    if (rect.bottom > window.innerHeight) dd.style.top = (e.clientY - rect.height) + 'px';
+  }, 0);
 }
+
+function closeMixInlineDropdown() {
+  document.getElementById('mixInlineDropdown').classList.remove('open');
+}
+
+function moveToMixGroup(variant, index, newMix) {
+  var st = getStateFor(variant);
+  st.rows[index].mix = newMix;
+  closeMixInlineDropdown();
+  renderTable(variant);
+}
+
+function releaseSingleMix(variant, index) {
+  var st = getStateFor(variant);
+  st.rows[index].mix = '-';
+  st.rows[index].mActive = false;
+  closeMixInlineDropdown();
+  renderTable(variant);
+}
+
 
 // ===== Interaction =====
 function handleNameClick(e, variant, index) {
@@ -1155,12 +1207,13 @@ function handleNameClick(e, variant, index) {
     st.lastClicked = index;
   }
   renderTable(variant);
-  if (variant === 'c' && st.selected.size > 1) {
+  if (st.selected.size > 1) {
     var hint = document.getElementById('selectionHint');
     hint.textContent = st.selected.size + '개 오더 선택됨 (우클릭으로 MIX 지정)';
     hint.classList.add('visible');
+    clearTimeout(hintTimer);
   } else {
-    showSelectionHint(st.selected.size);
+    document.getElementById('selectionHint').classList.remove('visible');
   }
 }
 
@@ -1170,49 +1223,6 @@ function getStateFor(v) {
   return stateC;
 }
 
-function toggleM(e, variant, index) {
-  e.stopPropagation();
-  var st = getStateFor(variant);
-
-  if (index === -1) {
-    // Bundle M toggle
-    st.bundle.mActive = !st.bundle.mActive;
-  } else {
-    // Individual M toggle - always individual, even in multi-select
-    st.rows[index].mActive = !st.rows[index].mActive;
-  }
-  renderTable(variant);
-}
-
-function toggleMixMenu(e, btn) {
-  e.stopPropagation();
-  // Close all other open menus first
-  document.querySelectorAll('.mix-dropdown-menu.open').forEach(function(m) {
-    if (m !== btn.nextElementSibling) m.classList.remove('open');
-  });
-  btn.nextElementSibling.classList.toggle('open');
-}
-
-function selectMixOpt(e, variant, index, newVal) {
-  e.stopPropagation();
-  var st = getStateFor(variant);
-
-  if (index === -1) {
-    st.bundle.mix = newVal;
-    renderTable(variant);
-    return;
-  }
-
-  if (st.selected.size > 1 && st.selected.has(index)) {
-    st.selected.forEach(function(i) {
-      st.rows[i].mix = newVal;
-    });
-    showSelectionHint(st.selected.size, newVal);
-  } else {
-    st.rows[index].mix = newVal;
-  }
-  renderTable(variant);
-}
 
 function toggleBundle(variant) {
   var tbody = document.getElementById('rxBody' + variant.toUpperCase());
@@ -1230,23 +1240,6 @@ function toggleBundle(variant) {
 
 // ===== Toast =====
 var hintTimer;
-function showSelectionHint(count, val) {
-  var hint = document.getElementById('selectionHint');
-  if (count > 1) {
-    if (val !== undefined) {
-      hint.textContent = count + '개 오더 MIX 값이 "' + val + '"(으)로 일괄 변경되었습니다';
-    } else {
-      hint.textContent = count + '개 오더 선택됨 (MIX 드롭다운 변경 시 일괄 적용)';
-    }
-    hint.classList.add('visible');
-  } else {
-    hint.classList.remove('visible');
-  }
-  clearTimeout(hintTimer);
-  hintTimer = setTimeout(function() {
-    if (val !== undefined) hint.classList.remove('visible');
-  }, 2000);
-}
 
 // ===== Variant switch =====
 function switchVariant(v) {
@@ -1263,11 +1256,12 @@ document.addEventListener('click', function(e) {
   if (!e.target.closest('.ctx-menu')) {
     closeCtxMenu();
   }
-  // Close any open mix dropdown menus
-  if (!e.target.closest('.mix-dropdown-wrap')) {
-    document.querySelectorAll('.mix-dropdown-menu.open').forEach(function(m) { m.classList.remove('open'); });
+  // Close inline MIX dropdown
+  if (!e.target.closest('.mix-inline-dropdown') && !e.target.closest('.mix-num')) {
+    closeMixInlineDropdown();
   }
-  if (!e.target.closest('.rx-name-cell') && !e.target.closest('.mix-dropdown-wrap') && !e.target.closest('.m-btn') && !e.target.closest('.ctx-menu')) {
+  // Clear selection when clicking outside interactive areas
+  if (!e.target.closest('.rx-name-cell') && !e.target.closest('.mix-num') && !e.target.closest('.ctx-menu') && !e.target.closest('.mix-inline-dropdown')) {
     var st = getState();
     if (st.selected.size > 0) {
       st.selected.clear();
@@ -1311,7 +1305,7 @@ function openSlipPreview(variant) {
   html += '<div class="slip-header-info">원내</div>';
 
   // 처방 목록 (사진처럼 한줄씩, MIX는 용법 옆에 표기)
-  var sorted = sortByMixGroup(st.rows);
+  var sorted = sortByMixGroupC(st.rows);
 
   sorted.forEach(function(i) {
     var row = st.rows[i];
@@ -1350,6 +1344,9 @@ function closeSlipPreview() {
 }
 
 function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+// Remove old toggleBundle reference
+function toggleBundle() {}
 
 // Init
 renderTable('a');
