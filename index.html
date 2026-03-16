@@ -832,9 +832,9 @@ var rxData = [
 ];
 
 // State per variant
-var stateA = { rows: JSON.parse(JSON.stringify(rxData)), selected: new Set() };
-var stateB = { rows: JSON.parse(JSON.stringify(rxData)), selected: new Set() };
-var stateC = { rows: JSON.parse(JSON.stringify(rxData)), selected: new Set(), nextMix: 1 };
+var stateA = { rows: JSON.parse(JSON.stringify(rxData)), selected: new Set(), lastClicked: -1 };
+var stateB = { rows: JSON.parse(JSON.stringify(rxData)), selected: new Set(), lastClicked: -1 };
+var stateC = { rows: JSON.parse(JSON.stringify(rxData)), selected: new Set(), lastClicked: -1, nextMix: 1 };
 
 var currentVariant = 'a';
 
@@ -970,34 +970,34 @@ function showCtxMenu(x, y) {
 
   var html = '';
 
-  // "MIX 지정" with 2-level submenu
-  html += '<div class="ctx-menu-sub">';
-  html += '<div class="ctx-menu-item">MIX 지정 <span style="margin-left:auto;font-size:10px;">▶</span></div>';
-  html += '<div class="ctx-submenu">';
+  // "MIX 지정" - 클릭하면 바로 자동번호로 새 그룹 생성
+  // 서브메뉴에 기존 MIX 목록 + 해제
+  var hasSubmenu = groupNums.length > 0 || anyHasMix;
 
-  // New MIX group option
-  if (nextNew) {
-    html += '<div class="ctx-menu-item" onclick="assignNewMix()">새 MIX 그룹 <span style="font-size:10px;color:#9CA3AF;margin-left:auto;">MIX' + nextNew + '</span></div>';
-  }
+  if (hasSubmenu) {
+    html += '<div class="ctx-menu-sub">';
+    html += '<div class="ctx-menu-item" onclick="assignNewMix()">MIX 지정' + (nextNew ? ' <span style="font-size:10px;color:#9CA3AF;margin-left:auto;">→ MIX' + nextNew + '</span>' : '') + ' <span style="margin-left:4px;font-size:10px;">▶</span></div>';
+    html += '<div class="ctx-submenu">';
 
-  // Existing MIX groups to join
-  if (groupNums.length > 0) {
-    html += '<div style="border-top:1px solid #E5E7EB;margin:2px 0;"></div>';
+    // Existing MIX groups
     groupNums.forEach(function(n) {
       var badgeColor = ['','#3B82F6','#F59E0B','#10B981','#8B5CF6'][Number(n)] || '#6B7280';
       html += '<div class="ctx-menu-item" onclick="assignToMix(\'' + n + '\')">';
       html += '<span class="mix-badge-sm" style="background:' + badgeColor + ';"></span>';
       html += 'MIX' + n + '</div>';
     });
-  }
 
-  // 해제 option (same level as MIX groups)
-  if (anyHasMix) {
-    html += '<div style="border-top:1px solid #E5E7EB;margin:2px 0;"></div>';
-    html += '<div class="ctx-menu-item danger" onclick="releaseMix()">해제</div>';
-  }
+    // 해제
+    if (anyHasMix) {
+      html += '<div style="border-top:1px solid #E5E7EB;margin:2px 0;"></div>';
+      html += '<div class="ctx-menu-item danger" onclick="releaseMix()">해제</div>';
+    }
 
-  html += '</div></div>';
+    html += '</div></div>';
+  } else {
+    // No existing groups, just a simple "MIX 지정" item
+    html += '<div class="ctx-menu-item" onclick="assignNewMix()">MIX 지정</div>';
+  }
 
   // 약품정보조회
   html += '<div class="ctx-menu-item" style="border-top:1px solid #E5E7EB;margin-top:2px;padding-top:8px;" onclick="closeCtxMenu()">약품정보조회</div>';
@@ -1139,17 +1139,27 @@ function buildMixCell(variant, index, mActive, mixVal) {
 function handleNameClick(e, variant, index) {
   var st = getStateFor(variant);
 
-  if (e.metaKey || e.ctrlKey) {
+  if (e.shiftKey && st.lastClicked !== -1) {
+    // Shift+click: range select from lastClicked to index
+    var from = Math.min(st.lastClicked, index);
+    var to = Math.max(st.lastClicked, index);
+    if (!(e.metaKey || e.ctrlKey)) st.selected.clear();
+    for (var r = from; r <= to; r++) {
+      st.selected.add(r);
+    }
+  } else if (e.metaKey || e.ctrlKey) {
     // Toggle selection
     if (st.selected.has(index)) {
       st.selected.delete(index);
     } else {
       st.selected.add(index);
     }
+    st.lastClicked = index;
   } else {
     // Single click: clear all and select this one
     st.selected.clear();
     st.selected.add(index);
+    st.lastClicked = index;
   }
   renderTable(variant);
   if (variant === 'c' && st.selected.size > 1) {
