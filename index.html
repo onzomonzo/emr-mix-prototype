@@ -1139,19 +1139,20 @@ function showMixInlineDropdown(e, variant, index) {
   var groupNums = Object.keys(existingGroups).sort(function(a, b) { return Number(a) - Number(b); });
 
   var html = '';
-  // "Main" at top - means this row becomes the main/primary of its group (visual only)
-  html += '<div class="mid-item main-item" onclick="closeMixInlineDropdown()">Main</div>';
+  // "Main" at top - toggle checkbox concept
+  var isMain = row.mActive;
+  var checkIcon = isMain ? '☑' : '☐';
+  html += '<div class="mid-item main-item" onclick="toggleMain(\'' + variant + '\', ' + index + ')">' + checkIcon + ' Main</div>';
 
-  // Other existing groups (excluding current)
-  if (groupNums.length > 1 || (groupNums.length === 1 && groupNums[0] !== currentMix)) {
+  // Other existing groups (excluding current) for moving
+  var otherGroups = groupNums.filter(function(n) { return n !== currentMix; });
+  if (otherGroups.length > 0) {
     html += '<div class="mid-sep"></div>';
-    groupNums.forEach(function(n) {
-      if (n !== currentMix) {
-        var badgeColor = ['','#3B82F6','#F59E0B','#10B981','#8B5CF6'][Number(n)] || '#6B7280';
-        html += '<div class="mid-item" onclick="moveToMixGroup(\'' + variant + '\', ' + index + ', \'' + n + '\')">';
-        html += '<span style="width:14px;height:14px;border-radius:3px;background:' + badgeColor + ';display:inline-block;flex-shrink:0;"></span>';
-        html += 'MIX' + n + '으로 이동</div>';
-      }
+    otherGroups.forEach(function(n) {
+      var badgeColor = ['','#3B82F6','#F59E0B','#10B981','#8B5CF6'][Number(n)] || '#6B7280';
+      html += '<div class="mid-item" onclick="moveToMixGroup(\'' + variant + '\', ' + index + ', \'' + n + '\')">';
+      html += '<span style="width:14px;height:14px;border-radius:3px;background:' + badgeColor + ';display:inline-block;flex-shrink:0;"></span>';
+      html += 'MIX' + n + '</div>';
     });
   }
 
@@ -1173,6 +1174,13 @@ function showMixInlineDropdown(e, variant, index) {
 
 function closeMixInlineDropdown() {
   document.getElementById('mixInlineDropdown').classList.remove('open');
+}
+
+function toggleMain(variant, index) {
+  var st = getStateFor(variant);
+  st.rows[index].mActive = !st.rows[index].mActive;
+  closeMixInlineDropdown();
+  renderTable(variant);
 }
 
 function moveToMixGroup(variant, index, newMix) {
