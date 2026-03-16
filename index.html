@@ -235,7 +235,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
 /* A안 MIX number in column */
 .mix-num {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 22px; height: 18px; border-radius: 4px;
+  min-width: 22px; height: 18px; border-radius: 4px; padding: 0 4px;
   font-size: 11px; font-weight: 700; color: #fff; cursor: pointer;
   line-height: 1;
 }
@@ -258,7 +258,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
   cursor: pointer; white-space: nowrap;
 }
 .mix-inline-dropdown .mid-item:hover { background: #F3F4F6; }
-.mix-inline-dropdown .mid-item.main-item { font-weight: 600; color: #111827; }
+.mix-inline-dropdown .mid-item.main-item { font-weight: 600; color: #111827; justify-content: space-between; }
 .mix-inline-dropdown .mid-item.danger { color: #EF4444; }
 .mix-inline-dropdown .mid-sep { border-top: 1px solid #E5E7EB; margin: 2px 0; }
 
@@ -920,7 +920,8 @@ function renderTable(variant) {
       nameCellContent = row.name;
       var mixCellHtml = '';
       if (hasMix) {
-        mixCellHtml = '<span class="mix-num mix-' + row.mix + '" onclick="showMixInlineDropdown(event, \'a\', ' + i + ')">' + row.mix + '</span>';
+        var mixLabel = (row.mActive ? 'M' : '') + row.mix;
+        mixCellHtml = '<span class="mix-num mix-' + row.mix + '" onclick="showMixInlineDropdown(event, \'a\', ' + i + ')">' + mixLabel + '</span>';
       }
       tr.innerHTML = iconTd + codeTd +
         '<td class="' + nameCellClass + '" onclick="handleNameClick(event, \'a\', ' + i + ')">' + nameCellContent + '</td>' +
@@ -1141,8 +1142,8 @@ function showMixInlineDropdown(e, variant, index) {
   var html = '';
   // "Main" at top - toggle checkbox concept
   var isMain = row.mActive;
-  var checkIcon = isMain ? '☑' : '☐';
-  html += '<div class="mid-item main-item" onclick="toggleMain(\'' + variant + '\', ' + index + ')">' + checkIcon + ' Main</div>';
+  var checkMark = isMain ? '<span style="color:#3B82F6;font-size:13px;">✓</span>' : '';
+  html += '<div class="mid-item main-item" onclick="toggleMain(\'' + variant + '\', ' + index + ')"><span>Main</span>' + checkMark + '</div>';
 
   // Other existing groups (excluding current) for moving
   var otherGroups = groupNums.filter(function(n) { return n !== currentMix; });
