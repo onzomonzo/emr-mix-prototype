@@ -970,33 +970,26 @@ function showCtxMenu(x, y) {
 
   var html = '';
 
-  // "MIX 지정" - 클릭하면 바로 자동번호로 새 그룹 생성
-  // 서브메뉴에 기존 MIX 목록 + 해제
-  var hasSubmenu = groupNums.length > 0 || anyHasMix;
+  // "MIX 지정" - 클릭하면 바로 다음 번호로 새 그룹 생성 (항상 직접 클릭)
+  if (nextNew) {
+    html += '<div class="ctx-menu-item" onclick="assignNewMix()" style="font-weight:500;">MIX 지정 <span style="font-size:10px;color:#9CA3AF;margin-left:auto;">→ MIX' + nextNew + '</span></div>';
+  }
 
-  if (hasSubmenu) {
-    html += '<div class="ctx-menu-sub">';
-    html += '<div class="ctx-menu-item" onclick="assignNewMix()">MIX 지정' + (nextNew ? ' <span style="font-size:10px;color:#9CA3AF;margin-left:auto;">→ MIX' + nextNew + '</span>' : '') + ' <span style="margin-left:4px;font-size:10px;">▶</span></div>';
-    html += '<div class="ctx-submenu">';
-
-    // Existing MIX groups
+  // 기존 MIX 그룹 (편입용)
+  if (groupNums.length > 0) {
+    html += '<div style="border-top:1px solid #E5E7EB;margin:2px 0;"></div>';
     groupNums.forEach(function(n) {
       var badgeColor = ['','#3B82F6','#F59E0B','#10B981','#8B5CF6'][Number(n)] || '#6B7280';
       html += '<div class="ctx-menu-item" onclick="assignToMix(\'' + n + '\')">';
       html += '<span class="mix-badge-sm" style="background:' + badgeColor + ';"></span>';
-      html += 'MIX' + n + '</div>';
+      html += 'MIX' + n + '에 편입</div>';
     });
+  }
 
-    // 해제
-    if (anyHasMix) {
-      html += '<div style="border-top:1px solid #E5E7EB;margin:2px 0;"></div>';
-      html += '<div class="ctx-menu-item danger" onclick="releaseMix()">해제</div>';
-    }
-
-    html += '</div></div>';
-  } else {
-    // No existing groups, just a simple "MIX 지정" item
-    html += '<div class="ctx-menu-item" onclick="assignNewMix()">MIX 지정</div>';
+  // 해제
+  if (anyHasMix) {
+    html += '<div style="border-top:1px solid #E5E7EB;margin:2px 0;"></div>';
+    html += '<div class="ctx-menu-item danger" onclick="releaseMix()">MIX 해제</div>';
   }
 
   // 약품정보조회
