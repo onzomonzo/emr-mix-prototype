@@ -1051,6 +1051,15 @@ function showCtxMenu(x, y) {
     html += '<div class="ctx-menu-item" style="font-weight:500;">주사MIX <span style="margin-left:auto;font-size:10px;color:#9CA3AF;">▸</span></div>';
     html += '<div class="ctx-submenu">';
 
+    // Main toggle (only for single MIX-assigned row in B/C)
+    if (st.selected.size === 1 && anyHasMix && (currentVariant === 'b' || currentVariant === 'c')) {
+      var selIdx = st.selected.values().next().value;
+      var selRow = st.rows[selIdx];
+      var mainCheck = selRow.mActive ? ' <span style="color:#3B82F6;font-weight:700;">✓</span>' : '';
+      html += '<div class="ctx-menu-item" style="font-weight:600;justify-content:space-between;" onclick="toggleMainFromCtx(' + selIdx + ')">Main' + mainCheck + '</div>';
+      html += '<div style="border-top:1px solid #E5E7EB;margin:2px 0;"></div>';
+    }
+
     // New MIX group
     if (nextNew) {
       html += '<div class="ctx-menu-item" onclick="assignNewMix()">새 MIX</div>';
@@ -1126,6 +1135,20 @@ function assignToMix(mixNum) {
   closeCtxMenu();
   renderTable(currentVariant);
   showMixHint(st.selected.size, mixNum);
+}
+
+function toggleMainFromCtx(index) {
+  var st = getState();
+  var row = st.rows[index];
+  var newState = !row.mActive;
+  if (newState && row.mix !== '-') {
+    st.rows.forEach(function(r) {
+      if (r.mix === row.mix) r.mActive = false;
+    });
+  }
+  row.mActive = newState;
+  closeCtxMenu();
+  renderTable(currentVariant);
 }
 
 function releaseMix() {
