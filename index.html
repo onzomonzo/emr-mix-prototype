@@ -376,7 +376,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
   line-height: 1.6; background: #FEFEFE;
 }
 .slip-receipt .slip-header-title {
-  font-size: 14px; font-weight: 700; text-align: left;
+  font-size: 12px; font-weight: normal; text-align: left;
 }
 .slip-receipt .slip-header-info {
   font-size: 10px; color: #555; margin-bottom: 4px;
@@ -391,7 +391,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
   width: 100%; border-collapse: collapse; font-size: 10px; margin: 4px 0;
 }
 .slip-receipt .slip-rx-table th {
-  text-align: left; font-weight: 500; color: #666;
+  text-align: left; font-weight: normal; color: #555;
   padding: 2px 0; border-bottom: 1px solid #ddd;
 }
 .slip-receipt .slip-rx-table td {
@@ -400,7 +400,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
 .slip-receipt .slip-rx-table .slip-rx-name { max-width: 140px; word-break: break-all; white-space: normal; }
 .slip-receipt .slip-rx-table .slip-rx-right { text-align: right; padding-left: 6px; white-space: nowrap; }
 .slip-receipt .slip-mix-label {
-  font-size: 10px; font-weight: 600; color: #333;
+  font-size: 10px; font-weight: normal; color: #111;
   margin-top: 6px; padding: 2px 0;
 }
 .slip-receipt .slip-footer {
@@ -1362,7 +1362,7 @@ function openSlipPreview(variant) {
   var html = '<div class="slip-receipt">';
 
   // 상단: 진료기록 + 날짜시간
-  html += '<div class="slip-header-title">진료기록</div>';
+  html += '<div style="font-size:12px;">진료기록</div>';
   html += '<div style="display:flex; justify-content:space-between;">';
   html += '<span class="slip-header-info">' + dateStr + '</span>';
   html += '<span class="slip-header-info">' + timeStr + '</span>';
@@ -1370,18 +1370,12 @@ function openSlipPreview(variant) {
   html += '<hr class="slip-divider">';
 
   // 환자정보
-  html += '<div style="margin-bottom:2px;">';
-  html += '<span style="font-weight:600;">17</span>&nbsp;&nbsp;여&nbsp;&nbsp;';
-  html += '<span style="font-size:13px; font-weight:700;">조연숙</span>';
-  html += '</div>';
-  html += '<div class="slip-header-info">나이:54세&nbsp;&nbsp;&nbsp;주민:701116-</div>';
+  html += '<div style="margin-bottom:2px;">17  여  조연숙</div>';
+  html += '<div class="slip-header-info">나이:54세   주민:701116-</div>';
   html += '<hr class="slip-divider">';
 
   // 처방 헤더
-  html += '<div style="font-weight:700; margin-bottom:2px;">처방 ─────────────────────</div>';
-  html += '<div class="slip-header-info">원내</div>';
-
-  // 처방 테이블 (정렬된 칼럼)
+  html += '<div style="margin-bottom:2px;">처방 ---------------------</div>';
   html += '<table class="slip-rx-table">';
   html += '<thead><tr>';
   html += '<th style="text-align:left;">명칭</th>';
@@ -1392,32 +1386,17 @@ function openSlipPreview(variant) {
   html += '</tr></thead><tbody>';
 
   var sorted = sortByMixGroupC(st.rows);
-  var mixColors = {'1':'#3B82F6','2':'#F59E0B','3':'#10B981','4':'#8B5CF6'};
-  var lastMixGroup = null;
 
   sorted.forEach(function(i) {
     var row = st.rows[i];
-
-    // MIX group header row
-    if (row.mix !== '-' && row.mix !== lastMixGroup) {
-      var mColor = mixColors[row.mix] || '#6B7280';
-      html += '<tr><td colspan="5" style="font-size:10px; font-weight:600; color:' + mColor + '; padding:4px 0 1px;">▶ MIX' + row.mix + ' (주사)</td></tr>';
-      lastMixGroup = row.mix;
-    } else if (row.mix === '-' && lastMixGroup !== null) {
-      lastMixGroup = null;
-    }
-
+    // MIX prefix: (1-main)name, (1)name, or just name
     var prefix = '';
-    var nameWeight = '';
-    if (row.mix !== '-' && row.mActive) {
-      prefix = '★ ';
-      nameWeight = ' font-weight:600;';
-    } else if (row.mix !== '-') {
-      prefix = '&nbsp;&nbsp;';
+    if (row.mix !== '-') {
+      prefix = '(' + row.mix + (row.mActive ? '-main' : '') + ')';
     }
 
     html += '<tr>';
-    html += '<td class="slip-rx-name" style="' + nameWeight + '">' + prefix + row.name + '</td>';
+    html += '<td class="slip-rx-name">' + prefix + row.name + '</td>';
     html += '<td class="slip-rx-right">' + row.dose + '</td>';
     html += '<td class="slip-rx-right">' + row.perDay + '</td>';
     html += '<td class="slip-rx-right">' + row.days + '</td>';
@@ -1430,7 +1409,7 @@ function openSlipPreview(variant) {
   html += '<hr class="slip-divider">';
 
   // 하단: 진료의
-  html += '<div style="font-size:11px; font-weight:600;">진료의: doctor 카야</div>';
+  html += '<div style="font-size:11px;">진료의: doctor 카야</div>';
 
   html += '</div>';
 
