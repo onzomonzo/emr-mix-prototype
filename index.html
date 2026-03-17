@@ -953,7 +953,7 @@ function renderTable(variant) {
       var badgeRight = '';
       if (hasMix) {
         var mainCls = row.mActive ? ' mix-main' : '';
-        badgeRight = '<span class="mix-badge-right mix-' + row.mix + mainCls + '" oncontextmenu="showMixInlineDropdown(event, \'b\', ' + i + ')">' + row.mix + '</span>';
+        badgeRight = '<span class="mix-badge-right mix-' + row.mix + mainCls + '">' + row.mix + '</span>';
       }
       tr.innerHTML = iconTd + codeTd +
         '<td class="' + nameCellClass + '" onclick="handleNameClick(event, \'b\', ' + i + ')"><span>' + row.name + '</span>' + badgeRight + '</td>' +
@@ -964,7 +964,7 @@ function renderTable(variant) {
       var badgeLeft = '';
       if (hasMix) {
         var mainCls = row.mActive ? ' mix-main' : '';
-        badgeLeft = '<span class="mix-badge mix-' + row.mix + mainCls + '" oncontextmenu="showMixInlineDropdown(event, \'c\', ' + i + ')">' + 'MIX' + row.mix + '</span>';
+        badgeLeft = '<span class="mix-badge mix-' + row.mix + mainCls + '">' + 'MIX' + row.mix + '</span>';
       }
       tr.innerHTML = iconTd + codeTd +
         '<td class="' + nameCellClass + '" onclick="handleNameClick(event, \'c\', ' + i + ')">' + badgeLeft + row.name + '</td>' +
