@@ -236,13 +236,19 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
 .mix-num {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 22px; height: 18px; border-radius: 4px; padding: 0 4px;
-  font-size: 11px; font-weight: 700; color: #fff; cursor: pointer;
-  line-height: 1;
+  font-size: 11px; font-weight: 700; cursor: pointer;
+  line-height: 1; border: 1.5px solid transparent; box-sizing: border-box;
 }
-.mix-num.mix-1 { background: #3B82F6; }
-.mix-num.mix-2 { background: #F59E0B; }
-.mix-num.mix-3 { background: #10B981; }
-.mix-num.mix-4 { background: #8B5CF6; }
+/* Non-main: outline style */
+.mix-num.mix-1 { background: transparent; border-color: #3B82F6; color: #3B82F6; }
+.mix-num.mix-2 { background: transparent; border-color: #F59E0B; color: #F59E0B; }
+.mix-num.mix-3 { background: transparent; border-color: #10B981; color: #10B981; }
+.mix-num.mix-4 { background: transparent; border-color: #8B5CF6; color: #8B5CF6; }
+/* Main: solid filled */
+.mix-num.mix-main.mix-1 { background: #3B82F6; color: #fff; border-color: #3B82F6; }
+.mix-num.mix-main.mix-2 { background: #F59E0B; color: #fff; border-color: #F59E0B; }
+.mix-num.mix-main.mix-3 { background: #10B981; color: #fff; border-color: #10B981; }
+.mix-num.mix-main.mix-4 { background: #8B5CF6; color: #fff; border-color: #8B5CF6; }
 
 /* A안 inline MIX dropdown (appears when clicking a number) */
 .mix-inline-dropdown {
@@ -266,13 +272,19 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
 .mix-badge-right {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 18px; height: 16px; border-radius: 4px; padding: 0 4px;
-  font-size: 10px; font-weight: 700; color: #fff; margin-left: auto;
-  flex-shrink: 0;
+  font-size: 10px; font-weight: 700; margin-left: auto;
+  flex-shrink: 0; border: 1.5px solid transparent; box-sizing: border-box;
 }
-.mix-badge-right.mix-1 { background: #3B82F6; }
-.mix-badge-right.mix-2 { background: #F59E0B; }
-.mix-badge-right.mix-3 { background: #10B981; }
-.mix-badge-right.mix-4 { background: #8B5CF6; }
+/* Non-main: outline style */
+.mix-badge-right.mix-1 { background: transparent; border-color: #3B82F6; color: #3B82F6; }
+.mix-badge-right.mix-2 { background: transparent; border-color: #F59E0B; color: #F59E0B; }
+.mix-badge-right.mix-3 { background: transparent; border-color: #10B981; color: #10B981; }
+.mix-badge-right.mix-4 { background: transparent; border-color: #8B5CF6; color: #8B5CF6; }
+/* Main: solid filled */
+.mix-badge-right.mix-main.mix-1 { background: #3B82F6; color: #fff; border-color: #3B82F6; }
+.mix-badge-right.mix-main.mix-2 { background: #F59E0B; color: #fff; border-color: #F59E0B; }
+.mix-badge-right.mix-main.mix-3 { background: #10B981; color: #fff; border-color: #10B981; }
+.mix-badge-right.mix-main.mix-4 { background: #8B5CF6; color: #fff; border-color: #8B5CF6; }
 
 /* B안 name cell needs flex for right-aligned badge */
 .rx-name-cell-flex {
@@ -291,13 +303,20 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
 /* C안: MIX badge on name */
 .mix-badge {
   display: inline-block; padding: 1px 6px; border-radius: 3px;
-  font-size: 9px; font-weight: 700; color: #fff; margin-right: 4px;
-  background: #6B7280; line-height: 1.4; vertical-align: middle;
+  font-size: 9px; font-weight: 700; margin-right: 4px;
+  line-height: 1.4; vertical-align: middle;
+  border: 1.5px solid transparent; box-sizing: border-box;
 }
-.mix-badge.mix-1 { background: #3B82F6; }
-.mix-badge.mix-2 { background: #F59E0B; }
-.mix-badge.mix-3 { background: #10B981; }
-.mix-badge.mix-4 { background: #8B5CF6; }
+/* Non-main: outline style */
+.mix-badge.mix-1 { background: transparent; border-color: #3B82F6; color: #3B82F6; }
+.mix-badge.mix-2 { background: transparent; border-color: #F59E0B; color: #F59E0B; }
+.mix-badge.mix-3 { background: transparent; border-color: #10B981; color: #10B981; }
+.mix-badge.mix-4 { background: transparent; border-color: #8B5CF6; color: #8B5CF6; }
+/* Main: solid filled */
+.mix-badge.mix-main.mix-1 { background: #3B82F6; color: #fff; border-color: #3B82F6; }
+.mix-badge.mix-main.mix-2 { background: #F59E0B; color: #fff; border-color: #F59E0B; }
+.mix-badge.mix-main.mix-3 { background: #10B981; color: #fff; border-color: #10B981; }
+.mix-badge.mix-main.mix-4 { background: #8B5CF6; color: #fff; border-color: #8B5CF6; }
 
 /* C안: Context menu */
 .ctx-menu {
@@ -920,8 +939,8 @@ function renderTable(variant) {
       nameCellContent = row.name;
       var mixCellHtml = '';
       if (hasMix) {
-        var mixLabel = (row.mActive ? 'M' : '') + row.mix;
-        mixCellHtml = '<span class="mix-num mix-' + row.mix + '" onclick="showMixInlineDropdown(event, \'a\', ' + i + ')">' + mixLabel + '</span>';
+        var mainCls = row.mActive ? ' mix-main' : '';
+        mixCellHtml = '<span class="mix-num mix-' + row.mix + mainCls + '" onclick="showMixInlineDropdown(event, \'a\', ' + i + ')">' + row.mix + '</span>';
       }
       tr.innerHTML = iconTd + codeTd +
         '<td class="' + nameCellClass + '" onclick="handleNameClick(event, \'a\', ' + i + ')">' + nameCellContent + '</td>' +
@@ -933,8 +952,8 @@ function renderTable(variant) {
       nameCellClass += ' rx-name-cell-flex';
       var badgeRight = '';
       if (hasMix) {
-        var bLabel = (row.mActive ? 'M' : '') + row.mix;
-        badgeRight = '<span class="mix-badge-right mix-' + row.mix + '" oncontextmenu="showMixInlineDropdown(event, \'b\', ' + i + ')">' + bLabel + '</span>';
+        var mainCls = row.mActive ? ' mix-main' : '';
+        badgeRight = '<span class="mix-badge-right mix-' + row.mix + mainCls + '" oncontextmenu="showMixInlineDropdown(event, \'b\', ' + i + ')">' + row.mix + '</span>';
       }
       tr.innerHTML = iconTd + codeTd +
         '<td class="' + nameCellClass + '" onclick="handleNameClick(event, \'b\', ' + i + ')"><span>' + row.name + '</span>' + badgeRight + '</td>' +
@@ -944,8 +963,8 @@ function renderTable(variant) {
       // C안: badge on LEFT of name
       var badgeLeft = '';
       if (hasMix) {
-        var cLabel = 'MIX' + (row.mActive ? 'M' : '') + row.mix;
-        badgeLeft = '<span class="mix-badge mix-' + row.mix + '" oncontextmenu="showMixInlineDropdown(event, \'c\', ' + i + ')">' + cLabel + '</span>';
+        var mainCls = row.mActive ? ' mix-main' : '';
+        badgeLeft = '<span class="mix-badge mix-' + row.mix + mainCls + '" oncontextmenu="showMixInlineDropdown(event, \'c\', ' + i + ')">' + 'MIX' + row.mix + '</span>';
       }
       tr.innerHTML = iconTd + codeTd +
         '<td class="' + nameCellClass + '" onclick="handleNameClick(event, \'c\', ' + i + ')">' + badgeLeft + row.name + '</td>' +
