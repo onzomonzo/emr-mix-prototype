@@ -1385,27 +1385,40 @@ function openSlipPreview(variant) {
   html += '</div>';
   html += '<div class="slip-header-info">원내</div>';
 
-  // 처방 목록 (사진처럼 한줄씩, MIX는 용법 옆에 표기)
+  // 처방 목록: MIX 그룹별로 묶어서 표시
   var sorted = sortByMixGroupC(st.rows);
+  var mixColors = {'1':'#3B82F6','2':'#F59E0B','3':'#10B981','4':'#8B5CF6'};
+  var lastMixGroup = null;
 
   sorted.forEach(function(i) {
     var row = st.rows[i];
-    var mixStr = '';
-    if (row.mix !== '-') {
-      mixStr = row.mix + '번';
-      if (!row.mActive) mixStr += 'mai';
-    }
     var rightPart = row.dose + '  ' + row.perDay + '  ' + row.days;
-    var usageMix = '';
-    if (row.usage) usageMix += row.usage;
-    if (mixStr) usageMix += (usageMix ? ' ' : '') + mixStr;
+
+    // MIX group header
+    if (row.mix !== '-' && row.mix !== lastMixGroup) {
+      var mColor = mixColors[row.mix] || '#6B7280';
+      html += '<div style="font-size:10px; font-weight:600; color:' + mColor + '; padding:3px 0 1px; margin-top:4px;">▶ MIX' + row.mix + ' (주사)</div>';
+      lastMixGroup = row.mix;
+    } else if (row.mix === '-' && lastMixGroup !== null) {
+      lastMixGroup = null;
+    }
+
+    // Row content
+    var prefix = '';
+    var nameStyle = 'flex:1; min-width:0; word-break:break-all;';
+    if (row.mix !== '-' && row.mActive) {
+      prefix = '★ ';
+      nameStyle += ' font-weight:600;';
+    } else if (row.mix !== '-') {
+      prefix = '&nbsp;&nbsp;&nbsp;';
+    }
 
     html += '<div style="display:flex; justify-content:space-between; font-size:10px; padding:1px 0;">';
-    html += '<span style="flex:1; min-width:0; word-break:break-all;">' + row.name + '</span>';
+    html += '<span style="' + nameStyle + '">' + prefix + row.name + '</span>';
     html += '<span style="white-space:nowrap; padding-left:8px; text-align:right;">' + rightPart + '</span>';
     html += '</div>';
-    if (usageMix) {
-      html += '<div style="font-size:10px; text-align:right; color:#555; margin-top:-2px;">' + usageMix + '</div>';
+    if (row.usage) {
+      html += '<div style="font-size:10px; text-align:right; color:#555; margin-top:-2px;">' + row.usage + '</div>';
     }
   });
 
