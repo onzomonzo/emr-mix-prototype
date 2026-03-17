@@ -933,7 +933,8 @@ function renderTable(variant) {
       nameCellClass += ' rx-name-cell-flex';
       var badgeRight = '';
       if (hasMix) {
-        badgeRight = '<span class="mix-badge-right mix-' + row.mix + '">' + row.mix + '</span>';
+        var bLabel = (row.mActive ? 'M' : '') + row.mix;
+        badgeRight = '<span class="mix-badge-right mix-' + row.mix + '" oncontextmenu="showMixInlineDropdown(event, \'b\', ' + i + ')">' + bLabel + '</span>';
       }
       tr.innerHTML = iconTd + codeTd +
         '<td class="' + nameCellClass + '" onclick="handleNameClick(event, \'b\', ' + i + ')"><span>' + row.name + '</span>' + badgeRight + '</td>' +
@@ -943,7 +944,8 @@ function renderTable(variant) {
       // C안: badge on LEFT of name
       var badgeLeft = '';
       if (hasMix) {
-        badgeLeft = '<span class="mix-badge mix-' + row.mix + '">MIX' + row.mix + '</span>';
+        var cLabel = 'MIX' + (row.mActive ? 'M' : '') + row.mix;
+        badgeLeft = '<span class="mix-badge mix-' + row.mix + '" oncontextmenu="showMixInlineDropdown(event, \'c\', ' + i + ')">' + cLabel + '</span>';
       }
       tr.innerHTML = iconTd + codeTd +
         '<td class="' + nameCellClass + '" onclick="handleNameClick(event, \'c\', ' + i + ')">' + badgeLeft + row.name + '</td>' +
@@ -1135,6 +1137,7 @@ function showMixHint(count, mixNum) {
 // ===== A안 Inline MIX Dropdown =====
 function showMixInlineDropdown(e, variant, index) {
   e.stopPropagation();
+  e.preventDefault();
   var st = getStateFor(variant);
   var row = st.rows[index];
   var currentMix = row.mix;
