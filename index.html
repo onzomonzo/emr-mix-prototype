@@ -1385,17 +1385,38 @@ function openSlipPreview(variant) {
   html += '</tr></thead><tbody>';
 
   var sorted = sortByMixGroupC(st.rows);
+  var lastMixGroup = null;
+  var hasAnyMixGroup = false;
 
   sorted.forEach(function(i) {
     var row = st.rows[i];
-    // MIX prefix: (1-main)name, (1)name, or just name
-    var prefix = '';
-    if (row.mix !== '-') {
-      prefix = '(' + row.mix + (row.mActive ? '-main' : '') + ')';
+    var isGrouped = row.mix !== '-';
+
+    // Insert separator between groups, and between last group and ungrouped
+    if (isGrouped && lastMixGroup !== null && row.mix !== lastMixGroup) {
+      html += '<tr><td colspan="5" style="padding:2px 0;"><div style="border-bottom:1px solid #999;"></div></td></tr>';
+    } else if (!isGrouped && hasAnyMixGroup && lastMixGroup !== null) {
+      html += '<tr><td colspan="5" style="padding:2px 0;"><div style="border-bottom:1px solid #999;"></div></td></tr>';
+      lastMixGroup = null;
     }
 
+    var displayName = '';
+    if (isGrouped && row.mActive) {
+      // Main: show [N] drugname
+      displayName = '[' + row.mix + '] ' + row.name;
+      hasAnyMixGroup = true;
+    } else if (isGrouped) {
+      // Grouped non-main: indented, no group number
+      displayName = '&nbsp;&nbsp;&nbsp;&nbsp;' + row.name;
+    } else {
+      // Ungrouped: plain name
+      displayName = row.name;
+    }
+
+    if (isGrouped) lastMixGroup = row.mix;
+
     html += '<tr>';
-    html += '<td class="slip-rx-name">' + prefix + row.name + '</td>';
+    html += '<td class="slip-rx-name">' + displayName + '</td>';
     html += '<td class="slip-rx-right">' + row.dose + '</td>';
     html += '<td class="slip-rx-right">' + row.perDay + '</td>';
     html += '<td class="slip-rx-right">' + row.days + '</td>';
