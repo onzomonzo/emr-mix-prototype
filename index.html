@@ -301,11 +301,12 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
 }
 .selection-hint.visible { opacity: 1; }
 
-/* C안: MIX badge on name */
+/* C안: MIX badge on name (number only) */
 .mix-badge {
-  display: inline-block; padding: 1px 6px; border-radius: 3px;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; border-radius: 3px;
   font-size: 9px; font-weight: 700; margin-right: 4px;
-  line-height: 1.4; vertical-align: middle;
+  vertical-align: middle;
   border: 1.5px solid transparent; box-sizing: border-box;
 }
 /* Non-main: outline style */
@@ -458,7 +459,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
 <div class="abtest-bar">
   <div class="abtest-tab active-a" onclick="switchVariant('a')" id="abtab-a"><span class="tab-badge badge-a">A</span>A안: MIX 단독칼럼</div>
   <div class="abtest-tab" onclick="switchVariant('b')" id="abtab-b"><span class="tab-badge badge-b">B</span>B안: 명칭 오른쪽 숫자</div>
-  <div class="abtest-tab" onclick="switchVariant('c')" id="abtab-c"><span class="tab-badge badge-c">C</span>C안: 명칭 왼쪽 단어</div>
+  <div class="abtest-tab" onclick="switchVariant('c')" id="abtab-c"><span class="tab-badge badge-c">C</span>C안: 명칭 왼쪽 숫자</div>
   <span class="abtest-desc">공통: 다중선택 &rarr; 우클릭 &rarr; 주사MIX 메뉴로 MIX 지정/편입/해제</span>
 </div>
 
@@ -748,7 +749,7 @@ body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Pretendard', sa
   <div class="content-area">
     <div class="column column-1">
       <div class="card usage-card">
-        <div class="card-header">사용방법 — C안: 명칭 왼쪽 단어</div>
+        <div class="card-header">사용방법 — C안: 명칭 왼쪽 숫자</div>
         <div class="card-body">
           <div class="mix-inst-row"><span class="mix-inst-label">MIX 그룹 만들기</span><span class="mix-inst-value">오더 선택 후 우클릭</span></div>
           <div class="mix-inst-row"><span class="mix-inst-label">MIX 그룹 변경</span><span class="mix-inst-value">오더 선택 후 우클릭</span></div>
@@ -962,7 +963,7 @@ function renderTable(variant) {
       var badgeLeft = '';
       if (hasMix) {
         var mainCls = row.mActive ? ' mix-main' : '';
-        badgeLeft = '<span class="mix-badge mix-' + row.mix + mainCls + '">' + 'MIX' + row.mix + '</span>';
+        badgeLeft = '<span class="mix-badge mix-' + row.mix + mainCls + '">' + row.mix + '</span>';
       }
       tr.innerHTML = iconTd + codeTd +
         '<td class="' + nameCellClass + '" onclick="handleNameClick(event, \'c\', ' + i + ')">' + badgeLeft + row.name + '</td>' +
