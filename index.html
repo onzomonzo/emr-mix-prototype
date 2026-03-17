@@ -1209,7 +1209,15 @@ function closeMixInlineDropdown() {
 
 function toggleMain(variant, index) {
   var st = getStateFor(variant);
-  st.rows[index].mActive = !st.rows[index].mActive;
+  var row = st.rows[index];
+  var newState = !row.mActive;
+  // If setting as Main, deactivate all other Main in same MIX group
+  if (newState && row.mix !== '-') {
+    st.rows.forEach(function(r) {
+      if (r.mix === row.mix) r.mActive = false;
+    });
+  }
+  row.mActive = newState;
   closeMixInlineDropdown();
   renderTable(variant);
 }
